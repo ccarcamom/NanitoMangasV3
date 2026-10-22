@@ -26,14 +26,6 @@
   .hero .carousel-control-prev, .hero .carousel-control-next { top: 90px; }
 }
 
-/* Portada: editoriales. */
-.brand-strip { padding-block: 2.5rem 3rem; text-align: center; }
-.brand-strip__list { list-style: none; margin: 1.25rem 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; }
-.brand-strip__tile {
-  min-width: 8.5rem; padding: 1rem 1.25rem; border: 1px solid var(--nm-line); border-radius: 12px;
-  background: var(--nm-surface); color: var(--nm-muted); font: 700 .875rem var(--nm-font-display);
-}
-
 /* Páginas de listado y contacto. */
 .page { padding-block: 2rem 3rem; }
 .page--narrow { max-width: 40rem; }
@@ -46,7 +38,7 @@
 /* Ficha de producto. */
 .crumbs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; color: var(--nm-muted); font-size: .875rem; }
 .crumbs a { color: var(--nm-muted); }
-.detail__img { width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 16px; background: var(--nm-surface); display: block; }
+.detail__img { width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: contain; border-radius: 16px; background: var(--nm-surface); display: block; }
 .detail__info { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; }
 .detail__info p { margin: 0; }
 .detail__brand { color: var(--nm-muted); font: 700 .8125rem var(--nm-font-display); text-transform: uppercase; letter-spacing: .04em; }
@@ -66,7 +58,7 @@
 .cart-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
 .cart-line { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 1rem; padding: .875rem; border: 1px solid var(--nm-line); border-radius: 12px; background: var(--nm-surface); }
 .cart-line.is-short { border-color: var(--nm-price); }
-.cart-line__img { width: 4.5rem; height: 6rem; object-fit: cover; border-radius: 8px; display: block; }
+.cart-line__img { width: 4.5rem; height: 6rem; object-fit: contain; border-radius: 8px; display: block; background: var(--nm-surface); }
 .cart-line__info { display: flex; flex-direction: column; gap: .125rem; min-width: 0; }
 .cart-line__name { color: var(--nm-ink); font: 700 1rem var(--nm-font-display); text-decoration: none; }
 .cart-line__unit { color: var(--nm-muted); font-size: .875rem; }

@@ -35,10 +35,14 @@
   color: var(--nm-ink);
   text-decoration: none;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
 }
 
+.site-logo__mascot { height: 2rem; width: auto; image-rendering: pixelated; }
+
 .site-logo:hover { color: var(--nm-ink); }
-.site-logo__dot { color: var(--nm-accent); }
 
 .site-icons {
   display: flex;

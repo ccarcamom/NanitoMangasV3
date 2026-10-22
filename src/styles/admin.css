@@ -17,7 +17,7 @@
 .admin__search { max-width: 22rem; margin-bottom: 1rem; border-radius: 999px; }
 .admin__table { --bs-table-bg: transparent; --bs-table-color: var(--nm-ink); }
 .admin__table th { white-space: nowrap; font-family: var(--nm-font-display); }
-.admin__thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: var(--nm-surface); }
+.admin__thumb { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: var(--nm-surface); }
 .admin__pill {
   display: inline-block; margin: 0 .25rem .25rem 0; padding: .125rem .625rem; border-radius: 999px;
   border: 1px solid var(--nm-accent); font-size: .75rem; font-weight: 700; white-space: nowrap;
