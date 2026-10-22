@@ -37,7 +37,7 @@ describe('AdminRoutes', () => {
     auth.api.setSession('user-admin')
     setup('/admin')
     expect(await screen.findByRole('heading', { name: 'Productos', level: 1 })).toBeTruthy()
-    expect(screen.getByText('Manga 1')).toBeTruthy() // datos de la API inyectada
+    expect(screen.getByText('One Piece - Tomo 1')).toBeTruthy() // datos de la API inyectada
     expect(screen.getByRole('link', { name: 'Usuarios' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Pedidos' })).toBeTruthy()
   })

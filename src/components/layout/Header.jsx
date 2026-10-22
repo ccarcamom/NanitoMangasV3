@@ -13,6 +13,7 @@ const genres = categories.find((c) => c.id === 'mangas').genres
 
 const links = [
   ['/categoria/funko', 'Funko Pop'],
+  ['/categoria/figuras', 'Figuras'],
   ['/categoria/accesorios', 'Accesorios'],
   ['/ofertas', 'Ofertas'],
   ['/novedades', 'Novedades'],
@@ -37,7 +38,7 @@ export default function Header() {
         <Navbar.Toggle aria-controls="main-menu" label="Abrir menú" className="icon-btn d-lg-none">
           <List size={26} aria-hidden="true" />
         </Navbar.Toggle>
-        <Link to="/" className="site-logo">NanitoMangas<span className="site-logo__dot" aria-hidden="true">.</span></Link>
+        <Link to="/" className="site-logo">NanitoMangas<img className="site-logo__mascot" src="/img/happy.png" alt="" width="30" height="40" /></Link>
         <SearchBar className="d-none d-lg-flex flex-grow-1" value={query} onChange={setQuery} onSearch={goSearch} />
         <div className="site-icons">
           {!ready ? (

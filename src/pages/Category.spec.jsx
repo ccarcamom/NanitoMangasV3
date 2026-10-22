@@ -9,7 +9,7 @@ import Category from './Category.jsx'
 
 const mk = (id, extra) => ({ id, name: `Prod ${id}`, brand: 'B', categoryId: 'mangas', genre: null, price: 1000, salePrice: null, stock: 3, image: '/i.svg', isNew: false, ...extra })
 const products = [
-  mk('a', { genre: 'shonen' }), mk('b', { genre: 'seinen' }),
+  mk('a', { genre: 'shonen' }), mk('b'),
   mk('c', { categoryId: 'funko', isNew: true }), mk('d', { isNew: true }),
 ]
 let api
@@ -52,7 +52,7 @@ describe('Category', () => {
   })
 
   it('"Quitar filtros" limpia ?genero= y vuelve a mostrar todo', () => {
-    setup('/categoria/mangas?genero=kodomo')
+    setup('/categoria/mangas?genero=seinen')
     expect(screen.queryByText('Prod a')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
     expect(screen.getByText('Prod a')).toBeTruthy()

@@ -32,7 +32,7 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: /NanitoMangas/ }).getAttribute('href')).toBe('/')
     const nav = screen.getByRole('navigation', { name: 'Menú principal' })
     const labels = [...nav.querySelectorAll('.nav-link')].map((a) => a.textContent.trim())
-    expect(labels).toEqual(['Inicio', 'Mangas', 'Funko Pop', 'Accesorios', 'Ofertas', 'Novedades', 'Contacto'])
+    expect(labels).toEqual(['Inicio', 'Mangas', 'Funko Pop', 'Figuras', 'Accesorios', 'Ofertas', 'Novedades', 'Contacto'])
     expect(nav.querySelector('.nav-link.active').textContent).toBe('Ofertas')
   })
 

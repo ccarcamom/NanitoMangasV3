@@ -22,7 +22,7 @@ export default function SearchBar({ onSearch, className = '', value, onChange })
         type="search"
         className="search-pill__input"
         aria-label="Buscar productos"
-        placeholder="Busca mangas, Funko Pop, accesorios…"
+        placeholder="Busca mangas, Funko Pop, figuras, accesorios…"
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />

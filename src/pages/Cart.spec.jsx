@@ -42,7 +42,7 @@ describe('Cart', () => {
   it('"Quitar" elimina la línea', () => {
     api.addToCart('manga-1', 1)
     setup()
-    fireEvent.click(screen.getByRole('button', { name: 'Quitar Manga 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar One Piece - Tomo 1' }))
     expect(screen.getByText('Tu carro está vacío')).toBeTruthy()
   })
 
