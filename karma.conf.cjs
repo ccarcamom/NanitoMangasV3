@@ -1,4 +1,5 @@
-process.env.CHROME_BIN = process.env.CHROME_BIN || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+// En macOS Chrome no está en el PATH; en Windows/Linux karma-chrome-launcher lo detecta solo (o usar CHROME_BIN).
+if (process.platform === 'darwin' && !process.env.CHROME_BIN) process.env.CHROME_BIN = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 
 module.exports = (config) => {
   config.set({

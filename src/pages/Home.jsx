@@ -1,11 +1,10 @@
 import { useRef } from 'react'
 import { useReveal } from '../hooks/useReveal.js'
-import { banners as seedBanners, brands } from '../data/seed.js'
+import { banners as seedBanners } from '../data/seed.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { useCart } from '../context/CartContext.jsx'
 import HeroBanner from '../components/shop/HeroBanner.jsx'
 import ProductCarousel from '../components/shop/ProductCarousel.jsx'
-import BrandStrip from '../components/shop/BrandStrip.jsx'
 import InfoStrip from '../components/layout/InfoStrip.jsx'
 
 const rows = [
@@ -33,7 +32,6 @@ export default function Home({ products: given, banners = seedBanners }) {
           </div>
         )
       })}
-      <div data-reveal><BrandStrip brands={brands} /></div>
       </div>
     </>
   )

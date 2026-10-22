@@ -22,13 +22,12 @@ describe('Home', () => {
   })
   afterEach(cleanup)
 
-  it('muestra los tres carruseles, la franja informativa y las editoriales', () => {
+  it('muestra los tres carruseles, y la franja informativa', () => {
     setup([mk('a', { isNew: true }), mk('b', { isBestSeller: true }), mk('c', { isRestock: true })])
     ;['Novedades', 'Más vendidos', 'De vuelta en stock'].forEach((t) => {
       expect(screen.getByRole('heading', { level: 2, name: t })).toBeTruthy()
     })
     expect(screen.getByRole('region', { name: 'Información de la tienda' })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Nuestras editoriales' })).toBeTruthy()
   })
 
   it('omite un carrusel sin productos', () => {

@@ -25,7 +25,7 @@ Todo funciona en el navegador: no hay servidor. Una capa de datos en JavaScript 
 ## Requisitos
 
 - Node.js 22.22 o superior (lo exige react-router 8). Probado con Node 24.
-- Google Chrome instalado (Karma lo usa en modo headless para las pruebas). En macOS se busca en `/Applications/Google Chrome.app`; en otro sistema, definir la variable `CHROME_BIN` con la ruta de Chrome.
+- Google Chrome instalado (Karma lo usa en modo headless para las pruebas). En macOS se busca en `/Applications/Google Chrome.app`; en Windows y Linux se detecta automáticamente, y si no lo encuentra, definir `CHROME_BIN` con la ruta de Chrome.
 
 ## Instalar y ejecutar
 
@@ -90,7 +90,6 @@ Los datos de la tarjeta nunca se guardan.
 - **Productos:** desde el panel de administración (`/admin/productos`: crear, editar, eliminar; la imagen se indica por URL), o editando `seedProducts` en `src/data/seed.js`. Los cambios a `seed.js` se ven después de reiniciar la tienda (borrar las claves `nanitomangas:*`), porque la siembra solo ocurre con el almacenamiento vacío.
 - **Categorías y géneros de manga:** `categories` en `src/data/seed.js`.
 - **Banners de la portada:** `banners` en `src/data/seed.js` (título, texto, imagen, botón y enlace).
-- **Editoriales de la portada:** `brands` en `src/data/seed.js`.
 - **Envío:** `SHIPPING` en `src/lib/shipping.js` (tarifa fija de despacho $3.990, gratis desde $40.000; el retiro en tienda es gratis).
 - **Datos de contacto y redes del pie:** `src/components/layout/Footer.jsx` (hoy son de relleno).
 
