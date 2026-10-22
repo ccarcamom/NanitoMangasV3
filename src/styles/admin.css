@@ -1,0 +1,45 @@
+/* Panel de administración. */
+.admin { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+@media (min-width: 992px) { .admin { grid-template-columns: 14rem minmax(0, 1fr); } }
+.admin__nav { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; }
+@media (min-width: 992px) { .admin__nav { flex-direction: column; overflow: visible; position: sticky; top: 1.5rem; } }
+.admin__link {
+  display: inline-flex; align-items: center; gap: .5rem; flex: none; padding: .5rem 1rem;
+  border: 1.5px solid var(--nm-line); border-radius: 999px; color: var(--nm-ink);
+  font-family: var(--nm-font-display); font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+.admin__link:hover { border-color: var(--nm-accent); color: var(--nm-ink); }
+.admin__link.active { border-color: var(--nm-accent); background: var(--nm-accent); color: var(--nm-on-accent); }
+.admin__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.admin__head .page__title { margin: 0; }
+.admin__notice { margin: 0 0 1rem; padding: .625rem 1rem; border: 1px solid var(--nm-accent); border-radius: 12px; }
+.admin__notice[hidden] { display: none; }
+.admin__search { max-width: 22rem; margin-bottom: 1rem; border-radius: 999px; }
+.admin__table { --bs-table-bg: transparent; --bs-table-color: var(--nm-ink); }
+.admin__table th { white-space: nowrap; font-family: var(--nm-font-display); }
+.admin__thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: var(--nm-surface); }
+.admin__pill {
+  display: inline-block; margin: 0 .25rem .25rem 0; padding: .125rem .625rem; border-radius: 999px;
+  border: 1px solid var(--nm-accent); font-size: .75rem; font-weight: 700; white-space: nowrap;
+}
+.admin__actions { white-space: nowrap; }
+.admin__actions .btn + .btn { margin-left: .5rem; }
+.admin__form { max-width: 36rem; }
+.admin__flags { border: 0; padding: 0; margin: 0 0 1rem; }
+.admin__flags legend { float: none; width: auto; font-size: 1rem; font-family: var(--nm-font-body); font-weight: 700; margin-bottom: .5rem; }
+.modal-content { background: var(--nm-paper); color: var(--nm-ink); border-radius: 16px; }
+/* .visually-hidden es absolute: sin esto escapa del recorte de .table-responsive y ensancha la página. */
+.table-responsive { position: relative; }
+/* Celular: las celdas no se parten palabra por palabra; la tabla se desplaza dentro de .table-responsive. */
+.admin__table td { white-space: nowrap; }
+.admin__table td.admin__flags-cell { white-space: normal; min-width: 6.5rem; }
+/* Bajo xxl los botones de fila quedan solo con ícono (nombre accesible en aria-label) y con objetivo táctil de 44px. */
+@media (max-width: 1399.98px) {
+  .admin__actions .btn { width: 2.75rem; height: 2.75rem; padding: 0; display: inline-grid; place-items: center; }
+  .admin__table td > s { display: block; } /* precio normal sobre el de oferta: columna más angosta */
+}
+/* Celular: las tres pestañas caben sin cortarse. */
+@media (max-width: 575.98px) {
+  .admin__link { flex: 1 1 auto; justify-content: center; padding: .5rem .625rem; font-size: .875rem; }
+  .admin__link svg { display: none; }
+}

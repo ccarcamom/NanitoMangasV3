@@ -1,0 +1,201 @@
+/* Cabecera, menú, franja informativa y pie. */
+
+.site-header {
+  --bs-navbar-padding-y: 0;
+  --bs-navbar-padding-x: 0;
+  --bs-navbar-nav-link-padding-x: 0;
+  --bs-navbar-color: var(--nm-ink);
+  --bs-navbar-hover-color: var(--nm-ink);
+  --bs-navbar-active-color: var(--nm-ink);
+  --bs-navbar-toggler-border-color: transparent;
+  --bs-navbar-toggler-focus-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--nm-line);
+  font-family: var(--nm-font-display);
+}
+
+.site-header__top {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1.5rem;
+  padding-block: 1rem;
+}
+
+.site-logo {
+  font-family: var(--nm-font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  letter-spacing: -.02em;
+  color: var(--nm-ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-logo:hover { color: var(--nm-ink); }
+.site-logo__dot { color: var(--nm-accent); }
+
+.site-icons {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-left: auto;
+}
+
+.icon-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--nm-ink);
+  transition: background-color .2s;
+}
+
+.icon-btn:hover { background: var(--nm-surface); color: var(--nm-ink); }
+.navbar-toggler.icon-btn { box-shadow: none; }
+.navbar-toggler.icon-btn:focus-visible { outline: 2px solid var(--nm-accent); outline-offset: 2px; } /* Bootstrap le quita el outline al toggler */
+
+.cart-btn { transition: transform .25s var(--nm-ease-spring), background-color .2s; }
+.cart-btn__bag { display: inline-flex; }
+.cart-btn:hover { transform: scale(1.12) rotate(-6deg); }
+
+.cart-badge {
+  position: absolute;
+  top: 2px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--nm-accent);
+  color: var(--nm-on-accent);
+  font: 800 10px/1 var(--nm-font-display);
+}
+
+/* Menú principal: mayúsculas, ítem activo subrayado en naranja. */
+.main-nav .nav-link {
+  --bs-nav-link-padding-x: 0;
+  --bs-nav-link-padding-y: .375rem;
+  font-family: var(--nm-font-display);
+  font-weight: 800;
+  font-size: .8125rem;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--nm-ink);
+  transition: box-shadow .2s;
+}
+
+.main-nav .nav-link:hover { box-shadow: inset 0 -3px 0 rgba(var(--nm-accent-rgb), .4); }
+.main-nav .nav-link.active,
+.main-nav .nav-link.show { box-shadow: inset 0 -3px 0 var(--nm-accent); color: var(--nm-ink); }
+.main-nav .dropdown-toggle::after { display: none; }
+.main-nav .dropdown-toggle svg { vertical-align: middle; }
+
+/* Celular: menú en panel lateral. */
+.site-header .offcanvas-body .main-nav { flex-direction: column; align-items: flex-start; gap: .75rem; }
+
+@media (min-width: 992px) {
+  .site-header .offcanvas-body .main-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.625rem;
+    padding-bottom: .75rem;
+  }
+  .site-header .main-nav .nav-link { padding-bottom: .375rem; }
+}
+
+/* Pie pegado abajo en páginas cortas. */
+#root { display: flex; flex-direction: column; min-height: 100vh; }
+.site-main { flex: 1; }
+.site-main:focus { outline: none; } /* recibe el foco solo desde el enlace "Saltar al contenido" */
+.skip-link { position: absolute; left: 1rem; top: -4rem; z-index: 1100; padding: .625rem 1.25rem; border-radius: 999px; background: var(--nm-accent); color: var(--nm-on-accent); font: 700 .875rem var(--nm-font-display); text-decoration: none; }
+.skip-link:focus { top: 1rem; }
+
+/* Franja informativa: 3 datos con íconos naranjos. */
+.info-strip {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding-block: 1.5rem;
+  font-size: .875rem;
+}
+
+@media (min-width: 768px) {
+  .info-strip { grid-template-columns: repeat(3, 1fr); }
+}
+
+.info-strip__item { display: flex; gap: .75rem; align-items: flex-start; }
+.info-strip__icon { flex: none; color: var(--nm-accent); }
+.info-strip__title {
+  display: block;
+  font-family: var(--nm-font-display);
+  font-size: .75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* Pie de página. */
+.site-footer {
+  background: var(--nm-surface);
+  border-top: 1px solid var(--nm-line);
+  padding-block: 2.5rem 1.5rem;
+  font-size: .875rem;
+}
+
+.site-footer__title {
+  font-size: .75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 1rem;
+}
+
+.site-footer__list { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.site-footer__row { display: flex; gap: .5rem; align-items: flex-start; overflow-wrap: anywhere; } /* el correo largo no desborda la media columna en 375px */
+.site-footer__row svg { flex: none; margin-top: 2px; color: var(--nm-accent); }
+.site-footer a { color: var(--nm-ink); text-decoration-color: var(--nm-accent); text-underline-offset: 3px; }
+.site-footer a:hover { color: var(--bs-link-color); }
+
+.site-footer__legal {
+  margin: 2rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--nm-line);
+  color: var(--nm-muted);
+  font-size: .8125rem;
+}
+
+/* Celular angosto: que la fila superior quepa sin desbordar. */
+@media (max-width: 575.98px) {
+  .site-header__top { gap: .5rem; }
+  .site-icons { gap: 0; }
+  .site-logo { font-size: 1.25rem; }
+  .icon-btn { width: 2.5rem; height: 2.5rem; }
+}
+
+/* Cuenta en la cabecera. */
+.account-link { display: inline-flex; align-items: center; gap: .375rem; height: 2.75rem; padding-inline: .75rem; border-radius: 999px; color: var(--nm-ink); text-decoration: none; font: 700 .875rem var(--nm-font-display); }
+.account-link:hover { background: var(--nm-surface); color: var(--nm-ink); }
+.account-link__name { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-link--pending { min-width: 9.25rem; }
+/* Bootstrap pone flex-wrap: inherit en .navbar > .container; la fila superior nunca debe partirse. */
+.site-header .site-header__top { flex-wrap: nowrap; }
+/* Celular: cuenta solo con ícono (el texto queda para lectores de pantalla); "Salir" vive en /cuenta. */
+@media (max-width: 575.98px) {
+  .account-link { width: 2.5rem; height: 2.5rem; padding: 0; justify-content: center; }
+  .account-link__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .account-exit { display: none; }
+  .account-link--pending { min-width: 2.5rem; }
+}

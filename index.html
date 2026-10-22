@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NanitoMangas</title>
+    <link rel="icon" href="data:," />
+    <script>
+      // Aplica el tema guardado antes del primer pintado (formato de src/data/storage.js: prefijo + JSON).
+      try { if (JSON.parse(localStorage.getItem('nanitomangas:theme')) === 'dark') document.documentElement.dataset.bsTheme = 'dark' } catch (e) { /* sin acceso: queda claro */ }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
