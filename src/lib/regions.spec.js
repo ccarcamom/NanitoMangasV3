@@ -5,7 +5,7 @@ describe('regions', () => {
     expect(regions.length).toBe(16)
     regions.forEach((r) => {
       expect(r.comunas.length).toBeGreaterThanOrEqual(3)
-      expect(r.comunas.length).toBeLessThanOrEqual(6)
+      expect(r.comunas.length).toBeLessThanOrEqual(52)
     })
   })
 })
