@@ -1,15 +1,15 @@
 import FormField from '../../components/forms/FormField.jsx'
 import { categories } from '../../data/seed.js'
+import { getCategory, PRODUCT_FLAGS } from '../../lib/catalog.js'
 
 export const FIELD_IDS = {
   name: 'pf-name', brand: 'pf-brand', categoryId: 'pf-category', genre: 'pf-genre',
   price: 'pf-price', salePrice: 'pf-sale', stock: 'pf-stock', image: 'pf-image',
 }
-const CHECKS = [['isNew', 'Nuevo'], ['isBestSeller', 'Más vendido'], ['isRestock', 'Reingreso']]
 
 export default function ProductFormFields({ value: v, errors, onChange }) {
   const set = (key) => (e) => onChange({ [key]: e.target.value })
-  const genres = categories.find((c) => c.id === v.categoryId)?.genres ?? []
+  const genres = getCategory(v.categoryId)?.genres ?? []
   const text = (key, label, extra = {}) => (
     <FormField id={FIELD_IDS[key]} label={label} value={v[key]} onChange={set(key)} error={errors[key]} {...extra} />
   )
@@ -35,7 +35,7 @@ export default function ProductFormFields({ value: v, errors, onChange }) {
       <FormField id="pf-description" label="Descripción (opcional)" as="textarea" rows={4} value={v.description} onChange={set('description')} />
       <fieldset className="admin__flags">
         <legend className="form-label">Marcas</legend>
-        {CHECKS.map(([key, label]) => (
+        {PRODUCT_FLAGS.map(([key, label]) => (
           <div className="form-check form-check-inline" key={key}>
             <input id={`pf-${key}`} type="checkbox" className="form-check-input" checked={v[key]} onChange={(e) => onChange({ [key]: e.target.checked })} />
             <label htmlFor={`pf-${key}`} className="form-check-label">{label}</label>

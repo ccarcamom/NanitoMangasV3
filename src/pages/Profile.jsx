@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
 import * as data from '../data/index.js'
+import { newestFirst } from '../lib/dates.js'
 import ProfileForm from '../components/account/ProfileForm.jsx'
 import OrderList from '../components/account/OrderList.jsx'
 
@@ -10,7 +11,7 @@ export default function Profile({ ordersApi = data }) {
   const navigate = useNavigate()
   if (!user) return null // ProtectedRoute ya redirige; esto cubre el instante del cierre de sesión
 
-  const orders = [...ordersApi.listOrdersByUser(user.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const orders = [...ordersApi.listOrdersByUser(user.id)].sort(newestFirst)
   const exit = () => { logout(); navigate('/') }
 
   return (

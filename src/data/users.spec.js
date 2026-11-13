@@ -21,7 +21,7 @@ describe('users', () => {
   it('rechaza correo repetido sin mayusculas ni espacios', async () => {
     const api = make()
     await api.registerUser(ana)
-    await expectAsync(api.registerUser({ ...ana, email: 'ana@x.cl' })).toBeRejectedWithError('EMAIL_TAKEN')
+    await expect(api.registerUser({ ...ana, email: 'ana@x.cl' })).rejects.toThrow('EMAIL_TAKEN')
   })
   it('dos registros paralelos con el mismo correo crean una sola cuenta', async () => {
     const api = make()
@@ -40,8 +40,8 @@ describe('users', () => {
   it('loginUser rechaza contrasena errada y correo desconocido', async () => {
     const api = make()
     await api.registerUser(ana)
-    await expectAsync(api.loginUser('ana@x.cl', 'mala')).toBeRejectedWithError('INVALID_CREDENTIALS')
-    await expectAsync(api.loginUser('nadie@x.cl', 'Secreto123')).toBeRejectedWithError('INVALID_CREDENTIALS')
+    await expect(api.loginUser('ana@x.cl', 'mala')).rejects.toThrow('INVALID_CREDENTIALS')
+    await expect(api.loginUser('nadie@x.cl', 'Secreto123')).rejects.toThrow('INVALID_CREDENTIALS')
   })
   it('el admin sembrado inicia sesion y es admin', async () => {
     const u = await make().loginUser(ADMIN_EMAIL, ADMIN_PASSWORD)
@@ -62,7 +62,7 @@ describe('users', () => {
   })
   it('subscribeUsers avisa al registrar', async () => {
     const api = make()
-    const cb = jasmine.createSpy('cb')
+    const cb = vi.fn()
     api.subscribeUsers(cb)
     await api.registerUser(ana)
     expect(cb).toHaveBeenCalled()

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useCart } from '../context/CartContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -9,6 +9,8 @@ import { isValidEmail, isValidRut, normalizeRut } from '../lib/validators.js'
 import EmptyState from '../components/common/EmptyState.jsx'
 import AddressFields from '../components/forms/AddressFields.jsx'
 import CardForm, { validateCard } from '../components/forms/CardForm.jsx'
+import { focusFirstError } from '../components/forms/formHelpers.js'
+import { useSubmitLock } from '../hooks/useSubmitLock.js'
 import BuyerFields from '../components/checkout/BuyerFields.jsx'
 import DeliveryOptions from '../components/checkout/DeliveryOptions.jsx'
 import CheckoutSummary from '../components/checkout/CheckoutSummary.jsx'
@@ -41,12 +43,10 @@ function CheckoutForm({ user, cart, deps }) {
   const [card, setCard] = useState({ number: '', expiry: '', cvv: '' }) // solo en memoria, nunca se persiste
   const [errors, setErrors] = useState({})
   const [failure, setFailure] = useState(null)
-  const [submitting, setSubmitting] = useState(false)
-  const busy = useRef(false)
+  const { pending: submitting, lock, unlock } = useSubmitLock()
 
-  const { lines, missing } = cart
+  const { lines, blocked } = cart
   const totals = cart.totals(method)
-  const blocked = missing.length > 0 || lines.some((l) => l.product.stock === 0 || l.qty > l.product.stock)
 
   // Corregir un campo borra su error; el resto sigue visible hasta el próximo envío.
   const edit = (setter, prev) => (next) => {
@@ -56,23 +56,17 @@ function CheckoutForm({ user, cart, deps }) {
 
   const release = (message) => {
     setFailure(message)
-    busy.current = false
-    setSubmitting(false)
+    unlock()
   }
 
   const submit = async (e) => {
     e.preventDefault()
-    if (busy.current || blocked) return
+    if (blocked) return
     const found = validate({ buyer, method, address, card })
     setErrors(found)
     setFailure(null)
-    const first = Object.keys(FIELD_IDS).find((k) => found[k])
-    if (first) {
-      document.getElementById(FIELD_IDS[first])?.focus()
-      return
-    }
-    busy.current = true
-    setSubmitting(true)
+    if (focusFirstError(found, FIELD_IDS)) return
+    if (!lock()) return
     let payment
     try {
       payment = await deps.simulatePayment(card)

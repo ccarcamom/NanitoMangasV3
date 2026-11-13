@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
 import { isValidEmail, isValidPassword } from '../lib/validators.js'
 import FormField from '../components/forms/FormField.jsx'
+import { bindFields } from '../components/forms/formHelpers.js'
+import { useSubmitLock } from '../hooks/useSubmitLock.js'
 
 const PASSWORD_RULE = 'La contraseña debe tener al menos 8 caracteres, una letra y un número.'
 const validate = (v) => ({
@@ -17,28 +19,24 @@ export default function Register() {
   const navigate = useNavigate()
   const [values, setValues] = useState({ name: '', email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
-  const [submitting, setSubmitting] = useState(false)
-  const busy = useRef(false)
+  const { pending: submitting, lock, unlock } = useSubmitLock()
 
   if (user && !submitting) return <Navigate to="/cuenta" replace />
 
-  const bind = (k) => ({ id: k, name: k, value: values[k], error: errors[k], onChange: (e) => setValues({ ...values, [k]: e.target.value }) })
+  const bind = bindFields(values, errors, setValues)
 
   const submit = async (e) => {
     e.preventDefault()
-    if (busy.current) return
     const found = validate(values)
     setErrors(found)
     if (Object.keys(found).length) return
-    busy.current = true
-    setSubmitting(true)
+    if (!lock()) return
     try {
       await register({ name: values.name.trim(), email: values.email, password: values.password })
       navigate('/cuenta', { replace: true })
     } catch (err) {
       setErrors({ email: err.message === 'EMAIL_TAKEN' ? 'Este correo ya está registrado' : 'No pudimos crear la cuenta, intenta de nuevo' })
-      busy.current = false
-      setSubmitting(false)
+      unlock()
     }
   }
 

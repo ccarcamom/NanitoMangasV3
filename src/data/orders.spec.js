@@ -106,7 +106,7 @@ describe('orders', () => {
 
   it('subscribeOrders avisa al crear un pedido', () => {
     const { cartApi, api } = setup()
-    const cb = jasmine.createSpy('cb')
+    const cb = vi.fn()
     api.subscribeOrders(cb)
     cartApi.addToCart('a', 1); order(api)
     expect(cb).toHaveBeenCalled()

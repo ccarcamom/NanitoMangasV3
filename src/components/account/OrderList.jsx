@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { formatCLP } from '../../lib/money.js'
+import { formatDate } from '../../lib/dates.js'
 import EmptyState from '../common/EmptyState.jsx'
 
 export default function OrderList({ orders }) {
@@ -17,7 +18,7 @@ export default function OrderList({ orders }) {
         <li key={o.id} className="order">
           <div className="order__head">
             <strong className="order__id">{o.id}</strong>
-            <span>{new Date(o.createdAt).toLocaleDateString('es-CL')}</span>
+            <span>{formatDate(o.createdAt)}</span>
             <span className="order__status">{o.status}</span>
             <strong className="order__total">{formatCLP(o.total)}</strong>
           </div>

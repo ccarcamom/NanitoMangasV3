@@ -19,7 +19,7 @@ describe('AdminOrders', () => {
     render(<AdminOrders api={api} />)
     expect(screen.getByRole('table', { name: 'Pedidos' })).toBeTruthy()
     const rows = screen.getAllByRole('row')
-    expect(rows).toHaveSize(3)
+    expect(rows).toHaveLength(3)
     expect(rows[1].textContent).toContain('NM-000002')
     expect(rows[2].textContent).toContain('NM-000001')
     expect(rows[1].textContent).toContain('$25.980')

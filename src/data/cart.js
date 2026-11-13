@@ -11,11 +11,19 @@ const toInt = (q) => {
 
 // Factory so specs can inject a fake storage and a stub products API.
 export const createCartApi = (storage, productsApi) => {
-  const stored = storage.read(KEY, [])
-  let items = Array.isArray(stored)
-    ? stored.filter((i) => i && typeof i.productId === 'string' && Number.isInteger(i.qty) && i.qty >= 1)
-    : []
+  const load = () => {
+    const stored = storage.read(KEY, [])
+    return Array.isArray(stored)
+      ? stored.filter((i) => i && typeof i.productId === 'string' && Number.isInteger(i.qty) && i.qty >= 1)
+      : []
+  }
+  let items = load()
   const listeners = new Set()
+  // otra pestaña escribió: se vuelve a leer para no pisar sus cambios con una copia vieja
+  storage.watch(KEY, () => {
+    items = load()
+    listeners.forEach((cb) => cb())
+  })
 
   const commit = (next) => {
     items = next
@@ -57,10 +65,9 @@ export const createCartApi = (storage, productsApi) => {
     removeFromCart,
     clearCart: () => { commit([]) },
     subscribeCart: (cb) => { listeners.add(cb); return () => { listeners.delete(cb) } },
-    getCartSnapshot: () => items,
   }
 }
 
 export const {
-  getCart, addToCart, setQty, removeFromCart, clearCart, subscribeCart, getCartSnapshot,
+  getCart, addToCart, setQty, removeFromCart, clearCart, subscribeCart,
 } = createCartApi(defaultStorage, { getProduct })

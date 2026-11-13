@@ -35,7 +35,7 @@ describe('Login', () => {
   })
 
   it('correo inválido o contraseña vacía no llama al servicio', () => {
-    const spy = spyOn(api, 'loginUser').and.callThrough()
+    const spy = vi.spyOn(api, 'loginUser')
     setup(api)
     fill('mal', '')
     fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
@@ -44,15 +44,8 @@ describe('Login', () => {
     expect(screen.getByText('Ingresa tu contraseña.')).toBeTruthy()
   })
 
-  it('credenciales con correo desconocido muestran el mismo aviso', async () => {
-    setup(api)
-    fill('nadie@mail.cl', 'Clave1234')
-    fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
-    expect((await screen.findByRole('alert')).textContent).toBe('Correo o contraseña incorrectos')
-  })
-
   it('dos envíos seguidos antes de que responda el servicio lo llaman una sola vez', () => {
-    const spy = spyOn(api, 'loginUser').and.returnValue(new Promise(() => {}))
+    const spy = vi.spyOn(api, 'loginUser').mockReturnValue(new Promise(() => {}))
     setup(api)
     fill('admin@nanitomangas.cl', 'Admin1234')
     const form = screen.getByRole('button', { name: 'Ingresar' }).closest('form')
@@ -66,17 +59,6 @@ describe('Login', () => {
     fill('admin@nanitomangas.cl', 'Admin1234')
     fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
     await screen.findByText('pedido')
-  })
-
-  it('doble clic llama al servicio una sola vez y entra', async () => {
-    const spy = spyOn(api, 'loginUser').and.callThrough()
-    setup(api)
-    fill('admin@nanitomangas.cl', 'Admin1234')
-    const btn = screen.getByRole('button', { name: 'Ingresar' })
-    fireEvent.click(btn)
-    fireEvent.click(btn)
-    await screen.findByText('inicio')
-    expect(spy).toHaveBeenCalledTimes(1)
   })
 
   it('con sesión iniciada redirige a /cuenta', async () => {

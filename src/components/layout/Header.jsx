@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { Container, Nav, Navbar, NavDropdown, Offcanvas } from 'react-bootstrap'
 import { CaretDown, List, SignOut, User } from '@phosphor-icons/react'
-import { categories } from '../../data/seed.js'
+import { getCategory } from '../../lib/catalog.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useCart } from '../../context/CartContext.jsx'
 import SearchBar from './SearchBar.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import CartButton from './CartButton.jsx'
 
-const genres = categories.find((c) => c.id === 'mangas').genres
+const genres = getCategory('mangas').genres
 
 const links = [
   ['/categoria/funko', 'Funko Pop'],

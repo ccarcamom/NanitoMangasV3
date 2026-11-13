@@ -13,12 +13,13 @@ const products = [
   mk('c', { categoryId: 'funko', isNew: true }), mk('d', { isNew: true }),
 ]
 let api
-const setup = (url, onlyNew = false) => render(
+const setup = (url, onlyNew = false, list = products) => render(
   <MemoryRouter initialEntries={[url]}>
     <CartProvider api={api}>
       <Routes>
-        <Route path="/categoria/:categoryId" element={<Category products={products} />} />
-        <Route path="/novedades" element={<Category products={products} onlyNew={onlyNew} />} />
+        <Route path="/categoria/:categoryId" element={<Category products={list} />} />
+        <Route path="/novedades" element={<Category products={list} onlyNew={onlyNew} />} />
+        <Route path="/ofertas" element={<Category products={list} onlyOffers />} />
       </Routes>
     </CartProvider>
   </MemoryRouter>,
@@ -72,5 +73,18 @@ describe('Category', () => {
     expect(screen.getByText('Prod c')).toBeTruthy()
     expect(screen.getByText('Prod d')).toBeTruthy()
     expect(screen.queryByText('Prod a')).toBeNull()
+  })
+
+  it('onlyOffers lista solo productos con oferta real', () => {
+    setup('/ofertas', false, [mk('a', { salePrice: 800 }), mk('b'), mk('c', { salePrice: 1500 })])
+    expect(screen.getByRole('heading', { level: 1, name: 'Ofertas' })).toBeTruthy()
+    expect(screen.getByText('Prod a')).toBeTruthy()
+    expect(screen.queryByText('Prod b')).toBeNull()
+    expect(screen.queryByText('Prod c')).toBeNull()
+  })
+
+  it('onlyOffers sin ofertas muestra el estado vacío', () => {
+    setup('/ofertas', false, [mk('b')])
+    expect(screen.getByText('Por ahora no hay ofertas')).toBeTruthy()
   })
 })

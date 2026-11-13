@@ -25,7 +25,7 @@ describe('AdminProducts', () => {
     api = createFakeAdminApi().api
     add({ id: 'p1', name: 'Pokémon Vol 1', brand: 'Panini' })
     add({ id: 'p2', name: 'Berserk', brand: 'Norma', salePrice: 9990 })
-    spyOn(api, 'deleteProduct').and.callThrough()
+    vi.spyOn(api, 'deleteProduct')
   })
   afterEach(cleanup)
 
@@ -33,7 +33,7 @@ describe('AdminProducts', () => {
     setup()
     expect(screen.getByRole('heading', { name: 'Productos', level: 1 })).toBeTruthy()
     expect(screen.getByRole('table', { name: 'Productos' })).toBeTruthy()
-    expect(screen.getAllByRole('row')).toHaveSize(api.listProducts().length + 1)
+    expect(screen.getAllByRole('row')).toHaveLength(api.listProducts().length + 1)
   })
 
   it('lee de la fuente inyectada y se actualiza cuando cambia', () => {
@@ -46,7 +46,7 @@ describe('AdminProducts', () => {
   it('filtra por nombre o marca sin tildes ni mayúsculas', () => {
     setup()
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'pokemon' } })
-    expect(screen.getAllByRole('row')).toHaveSize(2)
+    expect(screen.getAllByRole('row')).toHaveLength(2)
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'NORMA' } })
     expect(screen.getByText('Berserk')).toBeTruthy()
     expect(screen.queryByText('Pokémon Vol 1')).toBeNull()
@@ -65,7 +65,7 @@ describe('AdminProducts', () => {
     expect(await screen.findByText('¿Eliminar Berserk? Esta acción no se puede deshacer.')).toBeTruthy()
     expect(api.deleteProduct).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
-    expect(api.deleteProduct).toHaveBeenCalledOnceWith(id)
+    expect(api.deleteProduct).toHaveBeenCalledExactlyOnceWith(id)
     expect(screen.queryByText('Berserk')).toBeNull()
   })
 

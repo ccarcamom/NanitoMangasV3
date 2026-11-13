@@ -2,7 +2,7 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import QuantityInput from './QuantityInput.jsx'
 
 const setup = (props) => {
-  const onChange = jasmine.createSpy('onChange')
+  const onChange = vi.fn()
   render(<QuantityInput value={1} max={3} onChange={onChange} {...props} />)
   return onChange
 }
@@ -20,7 +20,7 @@ describe('QuantityInput', () => {
   it('0, negativo y vacío informan 1', () => {
     const onChange = setup({ value: 2 })
     for (const v of ['0', '-1', '']) {
-      onChange.calls.reset()
+      onChange.mockClear()
       type(v)
       expect(onChange).toHaveBeenCalledWith(1)
     }

@@ -53,7 +53,8 @@ describe('ProductDetail', () => {
 
   it('id inexistente muestra el estado vacío con enlace a la tienda', () => {
     setup('nada')
-    expect(screen.getAllByText('Producto no encontrado').length).toBe(2)
+    expect(screen.getAllByText('Producto no encontrado')).toHaveLength(1)
+    expect(screen.getByText('Ese producto no existe o ya no está a la venta.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Ir a la tienda' }).getAttribute('href')).toBe('/')
   })
 

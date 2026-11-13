@@ -17,39 +17,37 @@ Todo funciona en el navegador: no hay servidor. Una capa de datos en JavaScript 
 | Animaciones | gsap, @gsap/react | 3.15.0, 2.1.2 |
 | Íconos | @phosphor-icons/react | 2.1.10 |
 | Fuentes autoalojadas | @fontsource/montserrat, @fontsource/lato | 5.3.0 |
-| Pruebas | karma, karma-jasmine, jasmine-core | 6.4.4, 5.1.0, 7.0.2 |
-| Pruebas (navegador y cobertura) | karma-chrome-launcher, karma-coverage | 3.2.0, 2.2.1 |
-| Pruebas (compilación) | karma-webpack, webpack, babel-loader, @babel/core, babel-plugin-istanbul | 5.0.1, 5.112.0, 10.1.1, 8.0.7, 8.0.0 |
+| Pruebas | vitest, @vitest/coverage-v8, jsdom | 4.1.12, 4.1.12, 31.0.1 |
 | Pruebas de componentes | @testing-library/react, @testing-library/dom | 16.3.3, 10.4.2 |
 
 ## Requisitos
 
 - Node.js 22.22 o superior (lo exige react-router 8). Probado con Node 24.
-- Google Chrome instalado (Karma lo usa en modo headless para las pruebas). En macOS se busca en `/Applications/Google Chrome.app`; en Windows y Linux se detecta automáticamente, y si no lo encuentra, definir `CHROME_BIN` con la ruta de Chrome.
 
 ## Instalar y ejecutar
 
 ```bash
 npm install
 npm run dev        # abre la tienda en http://localhost:5173
-npm test           # corre las pruebas en Chrome headless y genera la cobertura
+npm test           # corre las pruebas (Vitest + jsdom)
+npm run coverage   # corre las pruebas y genera la cobertura
 npm run build      # genera la versión de producción en dist/
 npm run preview    # sirve dist/ para revisarla
 ```
 
-- `npm test` deja el reporte de cobertura en `coverage/`. Abrir `coverage/index.html` en el navegador para verlo por carpeta y archivo.
-- `npm run test:watch` deja Karma abierto y vuelve a correr las pruebas al guardar.
+- `npm run coverage` deja el reporte de cobertura en `coverage/`. Abrir `coverage/index.html` en el navegador para verlo por carpeta y archivo.
+- `npm run test:watch` deja Vitest abierto y vuelve a correr las pruebas al guardar.
 - `npm run build` muestra un aviso de que el archivo JavaScript supera 500 kB. Es solo una recomendación de Vite (dividir el código), no un error.
 
-Sobre las dependencias: karma-jasmine 5.1 trae su propia copia de jasmine-core (4.6), que es la que usa Karma al correr las pruebas; jasmine-core 7.0.2 queda instalado en la raíz. Al instalar no aparece aviso de peer dependencies. `npm audit` reporta vulnerabilidades solo en dependencias de desarrollo (Karma y sus herramientas); `npm audit --omit=dev` da 0, es decir, no afectan al sitio publicado.
+Sobre las dependencias: `npm audit --omit=dev` da 0 vulnerabilidades, es decir, ninguna afecta al sitio publicado.
 
 ## Estructura de carpetas
 
 ```
 nanitomangas/
   index.html             página base (aplica el tema guardado antes de pintar)
-  karma.conf.cjs         configuración de Karma (webpack + Babel + istanbul)
-  test/index.js          descubre todos los *.spec de src/
+  vite.config.js         configuración de Vite y de Vitest (jsdom, cobertura v8)
+  test/setup.js          preparación común de las pruebas (limpieza y APIs que jsdom no trae)
   public/img/            imagen de relleno de los productos
   docs/                  diseño, capturas responsivas e inventario de pruebas
   src/

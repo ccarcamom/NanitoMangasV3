@@ -5,9 +5,10 @@ import FormField from '../forms/FormField.jsx'
 import AddressFields from '../forms/AddressFields.jsx'
 
 const blank = { street: '', comuna: '', region: '' }
+const hasAddress = (a) => Object.values(a).some((x) => x.trim())
 
 const validate = (v) => {
-  const filled = Object.values(v.address).some((x) => x.trim())
+  const filled = hasAddress(v.address)
   return {
     ...(!v.name.trim() && { name: 'Ingresa tu nombre.' }),
     ...(v.rut.trim() && !isValidRut(v.rut) && { rut: 'Ingresa un RUT válido.' }),
@@ -31,11 +32,10 @@ export default function ProfileForm() {
     setErrors(found)
     setSaved(false)
     if (Object.keys(found).length) return
-    const filled = Object.values(values.address).some((x) => x.trim())
     updateProfile({
       name: values.name.trim(),
       rut: values.rut.trim() ? normalizeRut(values.rut) : '',
-      address: filled ? values.address : null,
+      address: hasAddress(values.address) ? values.address : null,
     })
     setSaved(true)
   }

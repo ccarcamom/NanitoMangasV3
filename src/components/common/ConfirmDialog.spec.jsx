@@ -4,8 +4,8 @@ import ConfirmDialog from './ConfirmDialog.jsx'
 describe('ConfirmDialog', () => {
   let onConfirm, onCancel
   const setup = (props = {}) => {
-    onConfirm = jasmine.createSpy('onConfirm')
-    onCancel = jasmine.createSpy('onCancel')
+    onConfirm = vi.fn()
+    onCancel = vi.fn()
     render(<ConfirmDialog show message="¿Seguro?" onConfirm={onConfirm} onCancel={onCancel} {...props} />)
   }
   afterEach(cleanup)

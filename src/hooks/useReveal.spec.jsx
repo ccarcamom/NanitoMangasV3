@@ -27,6 +27,11 @@ describe('useReveal', () => {
 
   it('sin reduce oculta lo que esta bajo el pliegue y registra triggers', () => {
     mockReducedMotion(false)
+    // jsdom no calcula layout: se simula que los bloques estan bajo el pliegue para que el trigger quede pendiente
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function rect() {
+      const top = this.hasAttribute('data-reveal') ? 3000 : 0
+      return { top, bottom: top + 20, left: 0, right: 100, width: 100, height: 20, x: 0, y: top }
+    })
     const { container } = render(<Box />)
     container.querySelectorAll('[data-reveal]').forEach((el) => expect(el.style.opacity).toBe('0'))
     expect(ScrollTrigger.getAll().length).toBeGreaterThan(0)

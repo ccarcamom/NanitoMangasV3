@@ -14,7 +14,7 @@ describe('AdminUsers', () => {
     const { container } = render(<AdminUsers api={fake.api} />)
     expect(screen.getByRole('heading', { name: 'Usuarios', level: 1 })).toBeTruthy()
     expect(screen.getByRole('table', { name: 'Usuarios' })).toBeTruthy()
-    expect(screen.getAllByRole('row')).toHaveSize(3)
+    expect(screen.getAllByRole('row')).toHaveLength(3)
     expect(screen.getByText('ana@mail.cl')).toBeTruthy()
     expect(screen.getByText('12345678-5')).toBeTruthy()
     expect(screen.getByText('-')).toBeTruthy()
@@ -24,7 +24,7 @@ describe('AdminUsers', () => {
 
   it('se actualiza cuando cambia la fuente inyectada', async () => {
     render(<AdminUsers api={fake.api} />)
-    expect(screen.getAllByRole('row')).toHaveSize(2)
+    expect(screen.getAllByRole('row')).toHaveLength(2)
     await act(async () => { await fake.usersApi.registerUser({ name: 'Luis', email: 'luis@mail.cl', password: 'Clave1234' }) })
     expect(screen.getByText('luis@mail.cl')).toBeTruthy()
   })

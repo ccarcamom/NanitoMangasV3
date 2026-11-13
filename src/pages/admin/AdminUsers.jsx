@@ -1,8 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import * as data from '../../data/index.js'
+import { formatDate } from '../../lib/dates.js'
 import { rowsOrEmpty } from './AdminTable.jsx'
-
-const fmt = (iso) => new Date(iso).toLocaleDateString('es-CL')
 
 // `api` = { subscribeUsers, listUsers }; specs inject one over a fake storage. Only safe fields reach the DOM (never passwordHash).
 export default function AdminUsers({ api = data }) {
@@ -15,7 +14,7 @@ export default function AdminUsers({ api = data }) {
         (u) => (
           <tr key={u.id}>
             <td>{u.name}</td><td>{u.email}</td><td>{u.role === 'admin' ? 'Administrador' : 'Cliente'}</td>
-            <td>{u.rut || '-'}</td><td>{fmt(u.createdAt)}</td>
+            <td>{u.rut || '-'}</td><td>{formatDate(u.createdAt)}</td>
           </tr>
         ))}
     </section>

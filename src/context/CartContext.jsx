@@ -7,7 +7,7 @@ const CartContext = createContext(null)
 
 // `api` = cart + products functions; specs inject one built on a fake storage.
 export function CartProvider({ children, api = data }) {
-  const items = useSyncExternalStore(api.subscribeCart, api.getCartSnapshot)
+  const items = useSyncExternalStore(api.subscribeCart, api.getCart)
   const products = useProducts(api)
 
   const value = useMemo(() => {
@@ -22,6 +22,7 @@ export function CartProvider({ children, api = data }) {
     return {
       lines,
       missing,
+      blocked: missing.length > 0 || lines.some((l) => l.qty > l.product.stock),
       count: lines.reduce((n, l) => n + l.qty, 0),
       add: (productId, qty = 1) => api.addToCart(productId, qty),
       setQty: (productId, qty) => api.setQty(productId, qty),

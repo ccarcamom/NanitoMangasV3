@@ -1,7 +1,8 @@
 import FormField from '../forms/FormField.jsx'
+import { bindFields } from '../forms/formHelpers.js'
 
 export default function BuyerFields({ value, onChange, errors = {} }) {
-  const bind = (k) => ({ id: `buyer-${k}`, value: value[k], error: errors[k], onChange: (e) => onChange({ ...value, [k]: e.target.value }) })
+  const bind = bindFields(value, errors, onChange, 'buyer-')
   return (
     <>
       <FormField label="Nombre" autoComplete="name" {...bind('name')} />

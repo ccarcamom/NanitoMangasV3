@@ -6,7 +6,7 @@ import CartSummary from '../components/shop/CartSummary.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
 
 export default function Cart() {
-  const { lines, missing, setQty, remove, totals } = useCart()
+  const { lines, missing, blocked, setQty, remove, totals } = useCart()
   const [method, setMethod] = useState('despacho')
   const [adjusted, setAdjusted] = useState([])
 
@@ -27,7 +27,6 @@ export default function Cart() {
     )
   }
 
-  const blocked = missing.length > 0 || lines.some((l) => l.qty > l.product.stock)
   return (
     <section className="container page">
       <h1 className="page__title">Tu carro</h1>

@@ -8,7 +8,7 @@ import EmptyState from '../../components/common/EmptyState.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import ProductRow from './ProductRow.jsx'
 
-// `api` = { subscribeProducts, getProductsSnapshot, deleteProduct }; specs inject one over a fake storage.
+// `api` = { subscribeProducts, listProducts, deleteProduct }; specs inject one over a fake storage.
 export default function AdminProducts({ api = data }) {
   const products = useProducts(api)
   const [query, setQuery] = useState('')

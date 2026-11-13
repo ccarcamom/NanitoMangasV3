@@ -29,7 +29,7 @@ describe('Profile', () => {
   afterEach(cleanup)
 
   it('RUT inválido muestra error y no guarda', async () => {
-    const spy = spyOn(api, 'updateProfile').and.callThrough()
+    const spy = vi.spyOn(api, 'updateProfile')
     setup()
     fireEvent.change(await screen.findByLabelText('RUT'), { target: { value: '12345678-9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))

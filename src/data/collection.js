@@ -1,9 +1,20 @@
 export const createCollection = (storage, key, seedItems) => {
-  const stored = storage.read(key, null)
   // Descarta basura guardada (null, números, objetos sin id string); no cambia cuándo se resiembra.
-  let items = Array.isArray(stored) ? stored.filter((i) => i && typeof i.id === 'string') : [...seedItems]
-  if (!Array.isArray(stored)) storage.write(key, items)
+  const load = () => {
+    const stored = storage.read(key, null)
+    return Array.isArray(stored) ? stored.filter((i) => i && typeof i.id === 'string') : null
+  }
+  let items = load()
+  if (!items) {
+    items = [...seedItems]
+    storage.write(key, items)
+  }
   const listeners = new Set()
+  // otra pestaña escribió: se vuelve a leer para no pisar sus cambios con una copia vieja
+  storage.watch(key, () => {
+    items = load() ?? items
+    listeners.forEach((cb) => cb())
+  })
 
   const commit = (next) => {
     items = next
@@ -13,7 +24,6 @@ export const createCollection = (storage, key, seedItems) => {
 
   return {
     all: () => items,
-    snapshot: () => items,
     get: (id) => items.find((i) => i.id === id),
     create(item) {
       const created = { ...item, id: item.id ?? crypto.randomUUID() }

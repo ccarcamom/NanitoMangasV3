@@ -12,7 +12,7 @@ describe('ThemeToggle', () => {
 
   it('pasa a modo oscuro al hacer clic y guarda la elección', () => {
     const storage = createStorage(fakeBackend())
-    spyOn(storage, 'write').and.callThrough()
+    vi.spyOn(storage, 'write')
     render(<ThemeProvider storage={storage}><ThemeToggle /></ThemeProvider>)
     expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light')
 

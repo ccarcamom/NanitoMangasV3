@@ -1,4 +1,4 @@
-import { METHODS } from '../shop/CartSummary.jsx'
+import { METHODS } from '../../lib/shipping.js'
 
 export default function DeliveryOptions({ value, onChange }) {
   return (

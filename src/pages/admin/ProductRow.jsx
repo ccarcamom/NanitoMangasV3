@@ -1,12 +1,10 @@
 import { Link } from 'react-router'
 import { PencilSimple, Trash } from '@phosphor-icons/react'
 import { formatCLP } from '../../lib/money.js'
-import { categories } from '../../data/seed.js'
-
-const FLAGS = [['isNew', 'Nuevo'], ['isBestSeller', 'Más vendido'], ['isRestock', 'Reingreso']]
+import { getCategory, PRODUCT_FLAGS } from '../../lib/catalog.js'
 
 export default function ProductRow({ product: p, onDelete }) {
-  const category = categories.find((c) => c.id === p.categoryId)?.name ?? p.categoryId
+  const category = getCategory(p.categoryId)?.name ?? p.categoryId
   return (
     <tr>
       <td><img className="admin__thumb" src={p.image} alt="" width="48" height="48" /></td>
@@ -19,7 +17,7 @@ export default function ProductRow({ product: p, onDelete }) {
           : formatCLP(p.price)}
       </td>
       <td>{p.stock}</td>
-      <td className="admin__flags-cell">{FLAGS.filter(([k]) => p[k]).map(([k, label]) => <span key={k} className="admin__pill">{label}</span>)}</td>
+      <td className="admin__flags-cell">{PRODUCT_FLAGS.filter(([k]) => p[k]).map(([k, label]) => <span key={k} className="admin__pill">{label}</span>)}</td>
       <td className="admin__actions">
         <Link to={`/admin/productos/${p.id}`} className="btn btn-outline-secondary btn-sm" aria-label={`Editar ${p.name}`} title="Editar">
           <PencilSimple size={16} aria-hidden="true" /> <span className="d-none d-xxl-inline">Editar</span>

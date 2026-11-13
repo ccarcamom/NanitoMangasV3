@@ -22,9 +22,7 @@ describe('createCollection', () => {
       expect(load([5])).toEqual([])
       expect(load([{}])).toEqual([])
       expect(load([{ id: 3 }])).toEqual([])
-    })
-    it('conserva los válidos de un arreglo mezclado', () => {
-      expect(load([null, { id: 'x', n: 1 }, 5, {}, { id: 'y' }])).toEqual([{ id: 'x', n: 1 }, { id: 'y' }])
+    expect(load([null, { id: 'x', n: 1 }, 5, {}])).toEqual([{ id: 'x', n: 1 }]) // conserva los válidos
     })
     it('un arreglo vacío guardado sigue vacío (no resiembra)', () => {
       expect(load([])).toEqual([])
@@ -38,7 +36,7 @@ describe('createCollection', () => {
   it('create asigna id y persiste', () => {
     const { b, c } = make()
     const item = c.create({ n: 3 })
-    expect(item.id).toEqual(jasmine.any(String))
+    expect(item.id).toEqual(expect.any(String))
     expect(c.get(item.id).n).toBe(3)
     expect(JSON.parse(b.data['nanitomangas:items']).length).toBe(3)
   })
@@ -61,7 +59,7 @@ describe('createCollection', () => {
   })
   it('subscribe se llama una vez por cambio y se cancela', () => {
     const { c } = make()
-    const cb = jasmine.createSpy('cb')
+    const cb = vi.fn()
     const off = c.subscribe(cb)
     c.create({ n: 3 })
     expect(cb).toHaveBeenCalledTimes(1)
@@ -69,12 +67,22 @@ describe('createCollection', () => {
     c.create({ n: 4 })
     expect(cb).toHaveBeenCalledTimes(1)
   })
-  it('snapshot conserva la referencia sin cambios y la renueva tras uno', () => {
+  it('all conserva la referencia sin cambios y la renueva tras uno', () => {
     const { c } = make()
-    const s1 = c.snapshot()
-    expect(c.snapshot()).toBe(s1)
+    const s1 = c.all()
     expect(c.all()).toBe(s1)
     c.create({ n: 3 })
-    expect(c.snapshot()).not.toBe(s1)
+    expect(c.all()).not.toBe(s1)
+  })
+  it('otra pestaña: el evento storage relee los datos y notifica', () => {
+    const { b, c } = make()
+    const cb = vi.fn()
+    c.subscribe(cb)
+    b.setItem('nanitomangas:items', JSON.stringify([{ id: 'z', n: 9 }]))
+    window.dispatchEvent(new StorageEvent('storage', { key: 'nanitomangas:items' }))
+    expect(c.all()).toEqual([{ id: 'z', n: 9 }])
+    expect(cb).toHaveBeenCalledTimes(1)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'nanitomangas:otra' }))
+    expect(cb).toHaveBeenCalledTimes(1)
   })
 })

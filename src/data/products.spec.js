@@ -23,18 +23,18 @@ describe('products', () => {
     expect(api.deleteProduct(p.id)).toBe(true)
     expect(api.getProduct(p.id)).toBeUndefined()
   })
-  it('subscribe y snapshot funcionan', () => {
+  it('subscribe y la lista cambian de referencia al escribir', () => {
     const api = make()
-    const cb = jasmine.createSpy('cb')
+    const cb = vi.fn()
     const off = api.subscribeProducts(cb)
-    const s = api.getProductsSnapshot()
+    const s = api.listProducts()
     api.createProduct(input)
     expect(cb).toHaveBeenCalledTimes(1)
-    expect(api.getProductsSnapshot()).not.toBe(s)
+    expect(api.listProducts()).not.toBe(s)
     off()
   })
   it('exporta la API por defecto', async () => {
     const m = await import('./products.js')
-    ;['listProducts', 'getProduct', 'createProduct', 'updateProduct', 'deleteProduct', 'subscribeProducts', 'getProductsSnapshot'].forEach((k) => expect(typeof m[k]).toBe('function'))
+    ;['listProducts', 'getProduct', 'createProduct', 'updateProduct', 'deleteProduct', 'subscribeProducts'].forEach((k) => expect(typeof m[k]).toBe('function'))
   })
 })

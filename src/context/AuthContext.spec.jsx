@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
 import { createFakeAuthApi } from '../data/fakeAuthApi.js'
 
@@ -26,8 +26,8 @@ describe('AuthContext', () => {
     await waitFor(() => { if (screen.getByTestId('ready').textContent !== 'true') throw new Error('esperando ready') })
     expect(screen.getByTestId('ready').textContent).toBe('true')
     expect(screen.getByTestId('user').textContent).toBe('none')
-    await act(async () => { fireEvent.click(screen.getByText('reg')) })
-    expect(screen.getByTestId('user').textContent).toBe('ana@mail.cl')
+    fireEvent.click(screen.getByText('reg'))
+    expect((await screen.findByText('ana@mail.cl')).dataset.testid).toBe('user')
     expect(screen.getByTestId('json').textContent).not.toContain('passwordHash')
     expect(api.getSessionUserId()).not.toBeNull()
     fireEvent.click(screen.getByText('out'))
@@ -37,8 +37,9 @@ describe('AuthContext', () => {
 
   it('login con credenciales válidas deja el usuario y sin hash', async () => {
     render(<AuthProvider api={api}><Probe /></AuthProvider>)
-    await act(async () => { fireEvent.click(screen.getByText('login')) })
-    expect(screen.getByTestId('user').textContent).toBe('admin@nanitomangas.cl')
+    fireEvent.click(screen.getByText('login'))
+    // el hash de la contraseña (crypto.subtle) termina después del clic en Node: se espera el resultado
+    expect((await screen.findByText('admin@nanitomangas.cl')).dataset.testid).toBe('user')
     expect(screen.getByTestId('json').textContent).not.toContain('passwordHash')
   })
 

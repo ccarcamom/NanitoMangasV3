@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router'
-import { categories } from '../data/seed.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { useCart } from '../context/CartContext.jsx'
 import { formatCLP } from '../lib/money.js'
+import { getCategory } from '../lib/catalog.js'
 import BuyBox from '../components/shop/BuyBox.jsx'
 import ProductGrid from '../components/shop/ProductGrid.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
@@ -20,13 +20,13 @@ export default function ProductDetail({ products: given }) {
     return (
       <section className="container page">
         <h1 className="page__title">Producto no encontrado</h1>
-        <EmptyState title="Producto no encontrado" text="Ese producto no existe o ya no está a la venta." action={<Link className="btn btn-primary" to="/">Ir a la tienda</Link>} />
+        <EmptyState title="Ese producto no existe o ya no está a la venta." action={<Link className="btn btn-primary" to="/">Ir a la tienda</Link>} />
       </section>
     )
   }
 
   const { name, brand, price, salePrice, stock, image, description, categoryId, genre } = product
-  const category = categories.find((c) => c.id === categoryId)
+  const category = getCategory(categoryId)
   const genreName = category?.genres.find((g) => g.id === genre)?.name
   const related = all.filter((p) => p.categoryId === categoryId && p.id !== id).slice(0, 4)
 

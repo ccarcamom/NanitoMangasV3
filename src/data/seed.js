@@ -1,5 +1,3 @@
-const IMG = '/img/placeholder.svg'
-
 export const ADMIN_EMAIL = 'admin@nanitomangas.cl'
 export const ADMIN_PASSWORD = 'Admin1234'
 // sha256 hex de 'Admin1234' (se verifica en la prueba de crypto.js)

@@ -2,6 +2,8 @@ import { Link, useParams } from 'react-router'
 import * as data from '../data/index.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { formatCLP } from '../lib/money.js'
+import { formatDate } from '../lib/dates.js'
+import TotalsRows from '../components/shop/TotalsRows.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
 
 // Solo lee el pedido guardado: recargar nunca crea otro ni toca el stock.
@@ -26,7 +28,7 @@ export default function OrderSuccess({ getOrder = data.getOrder }) {
       <div className="notice" role="status">Pago simulado: no se realizó ningún cobro real.</div>
       <dl className="receipt__meta">
         <div><dt>Pedido</dt><dd>{order.id}</dd></div>
-        <div><dt>Fecha</dt><dd>{new Date(order.createdAt).toLocaleDateString('es-CL')}</dd></div>
+        <div><dt>Fecha</dt><dd>{formatDate(order.createdAt)}</dd></div>
         <div><dt>Comprador</dt><dd>{buyer.name}</dd></div>
         <div><dt>Correo</dt><dd>{order.email}</dd></div>
         <div>
@@ -42,11 +44,7 @@ export default function OrderSuccess({ getOrder = data.getOrder }) {
           </li>
         ))}
       </ul>
-      <dl className="cart-summary__rows">
-        <div><dt>Subtotal</dt><dd>{formatCLP(order.subtotal)}</dd></div>
-        <div><dt>Envío</dt><dd>{formatCLP(order.shipping)}</dd></div>
-        <div className="cart-summary__total"><dt>Total</dt><dd className="text-price">{formatCLP(order.total)}</dd></div>
-      </dl>
+      <TotalsRows totals={order} />
       <div className="page__actions">
         <Link to="/" className="btn btn-primary">Seguir comprando</Link>
         {user && <Link to="/cuenta" className="btn btn-outline-secondary">Ver mis pedidos</Link>}

@@ -12,10 +12,9 @@ export const createProductsApi = (storage) => {
     updateProduct: (id, patch) => col.update(id, patch),
     deleteProduct: (id) => col.remove(id),
     subscribeProducts: (cb) => col.subscribe(cb),
-    getProductsSnapshot: () => col.snapshot(),
   }
 }
 
 export const {
-  listProducts, getProduct, createProduct, updateProduct, deleteProduct, subscribeProducts, getProductsSnapshot,
+  listProducts, getProduct, createProduct, updateProduct, deleteProduct, subscribeProducts,
 } = createProductsApi(defaultStorage)

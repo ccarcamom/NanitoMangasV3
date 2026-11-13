@@ -5,7 +5,7 @@ describe('SearchBar', () => {
   afterEach(cleanup)
 
   const setup = () => {
-    const onSearch = jasmine.createSpy('onSearch')
+    const onSearch = vi.fn()
     render(<SearchBar onSearch={onSearch} />)
     return { onSearch, input: screen.getByRole('searchbox', { name: 'Buscar productos' }) }
   }
@@ -14,7 +14,7 @@ describe('SearchBar', () => {
     const { onSearch, input } = setup()
     fireEvent.change(input, { target: { value: '  naruto ' } })
     fireEvent.submit(input.form)
-    expect(onSearch).toHaveBeenCalledOnceWith('naruto')
+    expect(onSearch).toHaveBeenCalledExactlyOnceWith('naruto')
   })
 
   it('no envía una búsqueda vacía o solo con espacios', () => {

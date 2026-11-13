@@ -68,10 +68,6 @@
   --bs-link-hover-color-rgb: 244, 244, 245;
 }
 
-/* El placeholder de relleno es gris claro: en oscuro se invierte para no encandilar (las fotos reales no se tocan). */
-[data-bs-theme="dark"] img[src$="placeholder.svg"] { filter: invert(.9) hue-rotate(180deg); }
-[data-bs-theme="dark"] .product-card.is-sold-out img[src$="placeholder.svg"] { filter: invert(.9) hue-rotate(180deg) grayscale(1); }
-
 body {
   background: var(--bs-body-bg);
   color: var(--bs-body-color);

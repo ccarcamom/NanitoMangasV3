@@ -1,11 +1,12 @@
 import { regions } from './regions.js'
 
 describe('regions', () => {
-  it('trae las 16 regiones con 3 a 6 comunas', () => {
+  it('trae las 16 regiones y las 346 comunas de Chile', () => {
     expect(regions.length).toBe(16)
-    regions.forEach((r) => {
-      expect(r.comunas.length).toBeGreaterThanOrEqual(3)
-      expect(r.comunas.length).toBeLessThanOrEqual(52)
-    })
+    expect(regions.flatMap((r) => r.comunas).length).toBe(346)
+  })
+
+  it('no repite comunas dentro de una región', () => {
+    regions.forEach((r) => expect(new Set(r.comunas).size).toBe(r.comunas.length))
   })
 })

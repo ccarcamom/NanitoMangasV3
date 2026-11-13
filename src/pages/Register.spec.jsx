@@ -28,7 +28,7 @@ describe('Register', () => {
   afterEach(cleanup)
 
   it('contraseña débil muestra el error y no llama al servicio', () => {
-    const spy = spyOn(api, 'registerUser').and.callThrough()
+    const spy = vi.spyOn(api, 'registerUser')
     setup(api)
     fill({ pass: 'abc' })
     expect(screen.getAllByText('La contraseña debe tener al menos 8 caracteres, una letra y un número.').length).toBe(1)
@@ -37,7 +37,7 @@ describe('Register', () => {
   })
 
   it('contraseñas distintas muestran error', () => {
-    const spy = spyOn(api, 'registerUser').and.callThrough()
+    const spy = vi.spyOn(api, 'registerUser')
     setup(api)
     fill({ pass: 'Clave1234', confirm: 'Clave12345' })
     expect(screen.getByText('Las contraseñas no coinciden.')).toBeTruthy()
@@ -61,7 +61,7 @@ describe('Register', () => {
   })
 
   it('dos envíos seguidos antes de que responda el servicio lo llaman una sola vez', () => {
-    const spy = spyOn(api, 'registerUser').and.returnValue(new Promise(() => {}))
+    const spy = vi.spyOn(api, 'registerUser').mockReturnValue(new Promise(() => {}))
     setup(api)
     fill({})
     const form = screen.getByRole('button', { name: 'Crear cuenta' }).closest('form')

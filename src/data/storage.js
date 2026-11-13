@@ -17,6 +17,12 @@ export const createStorage = (backend = defaultBackend()) => ({
   remove(key) {
     try { backend.removeItem(PREFIX + key) } catch { /* nada que hacer */ }
   },
+  // El evento "storage" solo llega cuando OTRA pestaña escribe (key null = la borraron toda).
+  watch(key, cb) {
+    const onStorage = (e) => { if (e.key === null || e.key === PREFIX + key) cb() }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  },
 })
 
 export const storage = createStorage()

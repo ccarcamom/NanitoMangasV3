@@ -39,7 +39,7 @@ describe('ProductCard', () => {
   })
 
   it('al hacer clic en "Añadir al carro" llama onAdd con el id', () => {
-    const onAdd = jasmine.createSpy('onAdd')
+    const onAdd = vi.fn()
     setup({}, onAdd)
     fireEvent.click(screen.getByRole('button', { name: 'Añadir al carro' }))
     expect(onAdd).toHaveBeenCalledWith('manga-1')

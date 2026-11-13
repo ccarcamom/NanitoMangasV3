@@ -4,16 +4,16 @@ Material de apoyo para el documento de cobertura de testing de NanitoMangas.
 
 ## Resultado actual
 
-`npm test` ejecuta **312 pruebas en 56 archivos `*.spec`**, todas en verde (Chrome headless).
+`npm test` ejecuta **303 pruebas en 58 archivos `*.spec`**, todas en verde (Vitest + jsdom).
 
 | Métrica | Cobertura | Detalle |
 |---|---|---|
-| Statements (sentencias) | 98,6 % | 922 de 935 |
-| Branches (ramas) | 89,07 % | 522 de 586 |
-| Functions (funciones) | 97,74 % | 346 de 354 |
-| Lines (líneas) | 98,94 % | 750 de 758 |
+| Statements (sentencias) | 98,24 % | 895 de 911 |
+| Branches (ramas) | 92,84 % | 597 de 643 |
+| Functions (funciones) | 97,63 % | 330 de 338 |
+| Lines (líneas) | 98,65 % | 732 de 742 |
 
-El reporte completo queda en `coverage/index.html` (abrir en el navegador; se puede navegar por carpeta y archivo y ver las líneas no cubiertas en rojo). También se genera `coverage/lcov.info`.
+El reporte completo queda en `coverage/index.html` (abrir en el navegador; se puede navegar por carpeta y archivo y ver las líneas no cubiertas en rojo). También se genera `coverage/lcov.info`. La cobertura se calcula con el proveedor v8 de Vitest (`npm run coverage`).
 
 ## Pruebas por carpeta
 
@@ -25,7 +25,7 @@ El reporte completo queda en `coverage/index.html` (abrir en el navegador; se pu
 | `src/components/` | Componentes: tarjetas, grilla, carrusel, formularios, cabecera, diálogo | 18 | 63 |
 | `src/pages/` | Páginas completas: portada, listados, ficha, carro, checkout, cuentas, administración | 18 | 117 |
 
-Algunas pruebas se generan en bucle (por ejemplo, una por campo inválido del checkout), por eso el total ejecutado (312) es mayor que la suma de bloques `it` escritos a mano (298).
+Algunas pruebas se generan en bucle (por ejemplo, una por valor inválido en el formulario de producto), por eso el total ejecutado (303) es mayor que la suma de bloques `it` escritos a mano (300).
 
 ## Tipos de prueba con ejemplos
 
@@ -37,24 +37,25 @@ Algunas pruebas se generan en bucle (por ejemplo, una por campo inválido del ch
 | Eventos | Que un clic o envío llama a la función correcta (con spy) | `src/components/shop/ProductCard.spec.jsx`: "al hacer clic en \"Añadir al carro\" llama onAdd con el id". `src/components/common/ConfirmDialog.spec.jsx`: "onConfirm solo con el botón de confirmar". `src/components/layout/SearchBar.spec.jsx`: "envía el texto escrito sin espacios sobrantes" |
 | Lógica pura | Funciones sin React: entradas y salidas | `src/lib/money.spec.js`: "formatea miles con punto". `src/lib/shipping.spec.js`: "borde del umbral: 39999 cobra y 40000 es gratis". `src/lib/validators.spec.js`: "isValidRut" y "luhnCheck" |
 | Capa de datos | CRUD y reglas de negocio sobre almacenamiento simulado | `src/data/users.spec.js`: "rechaza correo repetido sin mayusculas ni espacios" y "dos registros paralelos con el mismo correo crean una sola cuenta". `src/data/storage.spec.js`: "devuelve fallback con JSON corrupto" |
-| Mocks | Aislar el componente de lo externo (almacenamiento, pago, navegador) | `src/pages/Checkout.spec.jsx`: "RUT inválido muestra el error, enfoca el campo y no llama a simulatePayment" (pago simulado con `jasmine.createSpy`). `src/data/storage.spec.js`: "devuelve fallback si getItem lanza" (backend falso que falla). `src/hooks/useReveal.spec.jsx`: "con reduce no toca los estilos y no crea triggers" (`spyOn(window, 'matchMedia')`) |
+| Mocks | Aislar el componente de lo externo (almacenamiento, pago, navegador) | `src/pages/Checkout.spec.jsx`: "RUT inválido muestra el error, enfoca el campo y no llama a simulatePayment" (pago simulado con `vi.fn()`). `src/data/storage.spec.js`: "devuelve fallback si getItem lanza" (backend falso que falla). `src/hooks/useReveal.spec.jsx`: "con reduce no toca los estilos y no crea triggers" (`vi.spyOn(window, 'matchMedia')`) |
 
-## Cómo está configurado el entorno (Karma + Jasmine)
+## Cómo está configurado el entorno (Vitest + jsdom)
 
-- **Comando:** `npm test` ejecuta `karma start karma.conf.cjs --single-run`. `npm run test:watch` deja Karma mirando cambios.
-- **`karma.conf.cjs`:** frameworks `jasmine` y `webpack`; navegador `ChromeHeadless` (usa el Chrome instalado en `/Applications`); reporteros `progress` (consola) y `coverage`.
-- **Webpack + Babel:** Karma no usa Vite. Cada archivo pasa por `webpack` con `babel-loader` (`@babel/preset-env` y `@babel/preset-react`), así el JSX funciona en el navegador de pruebas.
-- **Cobertura con istanbul:** una segunda regla de `babel-loader` aplica `babel-plugin-istanbul` solo a `src/` y excluye los `*.spec`, para que el reporte muestre los archivos reales y no las pruebas. `karma-coverage` escribe el HTML, `lcov.info` y el resumen de texto en `coverage/`.
-- **Descubrimiento de specs:** `test/index.js` usa `require.context('../src', true, /\.spec\.jsx?$/)`, por lo que cualquier `*.spec.js` o `*.spec.jsx` dentro de `src/` se ejecuta sin registrarlo a mano.
-- **Sin CSS en las pruebas:** los componentes no importan hojas de estilo (solo `src/main.jsx` lo hace), así Karma no necesita loaders de CSS.
-- **Herramientas:** Jasmine (`describe`, `it`, `expect`, `beforeEach`, `spyOn`, `jasmine.createSpy`) y Testing Library (`render`, `screen`, `fireEvent`, `findBy*`). No se usa Jest.
+- **Comando:** `npm test` ejecuta `vitest run`. `npm run test:watch` deja Vitest mirando cambios y `npm run coverage` agrega el reporte de cobertura.
+- **`vite.config.js`:** el bloque `test` usa el mismo `vite.config.js` de la aplicación (plugin de React incluido), así el JSX se compila igual que en la tienda. Activa `globals` (`describe`, `it`, `expect`, `vi`), `environment: 'jsdom'` y `restoreMocks`, que restaura los `vi.spyOn` después de cada prueba.
+- **Cobertura con v8:** `@vitest/coverage-v8` mide solo `src/` y excluye los `*.spec`, `motionTest.js` y los dobles `fake*` de `src/data/`. Escribe el HTML, `lcov.info` y el resumen de texto en `coverage/`.
+- **`test/setup.js`:** limpia el DOM después de cada prueba y agrega `matchMedia` y `scrollBy`, que jsdom no trae.
+- **Descubrimiento de specs:** Vitest ejecuta cualquier `src/**/*.spec.js` o `*.spec.jsx` sin registrarlo a mano.
+- **Sin CSS en las pruebas:** los componentes no importan hojas de estilo (solo `src/main.jsx` lo hace).
+- **Límite de jsdom:** no calcula layout (`clientWidth` vale 0 y `getBoundingClientRect` devuelve ceros). Las pruebas del carrusel y de `useReveal` simulan esos valores; el comportamiento visual real se revisa a mano en el navegador.
+- **Herramientas:** Vitest (`describe`, `it`, `expect`, `beforeEach`, `vi.spyOn`, `vi.fn`) y Testing Library (`render`, `screen`, `fireEvent`, `findBy*`). No se usa Jest.
 
 ## Uso de mocks
 
 - **`fakeBackend`** (`src/data/fakeBackend.js`): un `localStorage` en memoria. Las pruebas crean `createStorage(fakeBackend())` y se lo inyectan a la capa de datos y a los contextos (`<CartProvider api={...}>`, `<ThemeProvider storage={...}>`), por lo que ninguna prueba toca el almacenamiento real del navegador ni depende del orden de ejecución.
 - **`fakeAuthApi` y `fakeAdminApi`** (`src/data/`): versiones de prueba de la API de cuentas y de administración sobre el mismo almacenamiento falso.
-- **Spies de Jasmine:** `jasmine.createSpy` reemplaza funciones recibidas por props (`onAdd`, `onSearch`, `onConfirm`) y dependencias inyectadas (`simulatePayment`, `placeOrder` en `Checkout`), para verificar si se llamaron, cuántas veces y con qué datos.
-- **`matchMedia` simulado** (`src/hooks/motionTest.js`): `spyOn(window, 'matchMedia')` responde a `prefers-reduced-motion`, para probar que las animaciones GSAP se desactivan con movimiento reducido.
+- **Spies de Vitest:** `vi.fn()` reemplaza funciones recibidas por props (`onAdd`, `onSearch`, `onConfirm`) y dependencias inyectadas (`simulatePayment`, `placeOrder` en `Checkout`), para verificar si se llamaron, cuántas veces y con qué datos.
+- **`matchMedia` simulado** (`src/hooks/motionTest.js`): `vi.spyOn(window, 'matchMedia')` responde a `prefers-reduced-motion`, para probar que las animaciones GSAP se desactivan con movimiento reducido.
 - **Dependencias inyectadas:** las páginas reciben por props opcionales sus datos o funciones (`products`, `api`, `deps`, `getOrder`); en la aplicación real se usan los valores por defecto y en las pruebas se pasan dobles controlados.
 
 ## Qué queda sin cubrir y por qué

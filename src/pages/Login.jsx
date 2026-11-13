@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
 import { isValidEmail } from '../lib/validators.js'
 import FormField from '../components/forms/FormField.jsx'
+import { bindFields } from '../components/forms/formHelpers.js'
+import { useSubmitLock } from '../hooks/useSubmitLock.js'
 
 const validate = (v) => ({
   ...(!isValidEmail(v.email.trim()) && { email: 'Ingresa un correo válido.' }),
@@ -16,29 +18,25 @@ export default function Login() {
   const [values, setValues] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const busy = useRef(false) // el estado llega tarde: el ref frena el doble clic
+  const { pending: submitting, lock, unlock } = useSubmitLock()
 
   if (user && !submitting) return <Navigate to="/cuenta" replace />
 
-  const bind = (k) => ({ id: k, name: k, value: values[k], error: errors[k], onChange: (e) => setValues({ ...values, [k]: e.target.value }) })
+  const bind = bindFields(values, errors, setValues)
 
   const submit = async (e) => {
     e.preventDefault()
-    if (busy.current) return
     const found = validate(values)
     setErrors(found)
     setFormError('')
     if (Object.keys(found).length) return
-    busy.current = true
-    setSubmitting(true)
+    if (!lock()) return
     try {
       await login(values.email, values.password)
       navigate(location.state?.from?.pathname ?? '/', { replace: true })
     } catch (err) {
       setFormError(err.message === 'INVALID_CREDENTIALS' ? 'Correo o contraseña incorrectos' : 'No pudimos ingresar, intenta de nuevo')
-      busy.current = false
-      setSubmitting(false)
+      unlock()
     }
   }
 

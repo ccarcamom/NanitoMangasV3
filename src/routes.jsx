@@ -2,7 +2,6 @@ import { Route, Routes } from 'react-router'
 import Layout from './components/layout/Layout.jsx'
 import Home from './pages/Home.jsx'
 import Category from './pages/Category.jsx'
-import Offers from './pages/Offers.jsx'
 import Search from './pages/Search.jsx'
 import ProductDetail from './pages/ProductDetail.jsx'
 import Cart from './pages/Cart.jsx'
@@ -24,7 +23,7 @@ export default function AppRoutes() {
         <Route index element={<Home />} />
         <Route path="categoria/:categoryId" element={<Category />} />
         <Route path="novedades" element={<Category onlyNew />} />
-        <Route path="ofertas" element={<Offers />} />
+        <Route path="ofertas" element={<Category onlyOffers />} />
         <Route path="buscar" element={<Search />} />
         <Route path="producto/:id" element={<ProductDetail />} />
         <Route path="carro" element={<Cart />} />

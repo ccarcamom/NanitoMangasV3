@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { isValidEmail } from '../lib/validators.js'
 import FormField from '../components/forms/FormField.jsx'
+import { bindFields } from '../components/forms/formHelpers.js'
 
 const empty = { nombre: '', correo: '', mensaje: '' }
 const validate = (v) => ({
@@ -13,7 +14,7 @@ export default function Contact() {
   const [values, setValues] = useState(empty)
   const [errors, setErrors] = useState({})
   const [sent, setSent] = useState(false)
-  const bind = (k) => ({ id: k, name: k, value: values[k], error: errors[k], onChange: (e) => setValues({ ...values, [k]: e.target.value }) })
+  const bind = bindFields(values, errors, setValues)
 
   const submit = (e) => {
     e.preventDefault()

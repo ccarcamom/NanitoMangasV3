@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import * as data from '../../data/index.js'
 import EmptyState from '../../components/common/EmptyState.jsx'
+import { focusFirstError } from '../../components/forms/formHelpers.js'
+import { useSubmitLock } from '../../hooks/useSubmitLock.js'
 import ProductFormFields, { FIELD_IDS } from './ProductFormFields.jsx'
 
 const BLANK = {
@@ -37,8 +39,7 @@ function Editor({ initial, id, api }) {
   const [value, setValue] = useState(initial)
   const [errors, setErrors] = useState({})
   const [failure, setFailure] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const busy = useRef(false)
+  const { pending: saving, lock, unlock } = useSubmitLock()
 
   const change = (patch) => {
     setValue((v) => ({ ...v, ...patch }))
@@ -47,11 +48,9 @@ function Editor({ initial, id, api }) {
 
   const submit = async (e) => {
     e.preventDefault()
-    if (busy.current) return
     const found = validate(value)
     setErrors(found)
-    const first = Object.keys(FIELD_IDS).find((k) => found[k])
-    if (first) return document.getElementById(FIELD_IDS[first])?.focus()
+    if (focusFirstError(found, FIELD_IDS)) return
     const input = {
       name: value.name.trim(), brand: value.brand.trim(), categoryId: value.categoryId,
       genre: value.categoryId === 'mangas' ? value.genre : null,
@@ -59,16 +58,14 @@ function Editor({ initial, id, api }) {
       stock: Number(value.stock), image: value.image.trim(), description: value.description.trim(),
       isNew: value.isNew, isBestSeller: value.isBestSeller, isRestock: value.isRestock,
     }
-    busy.current = true
-    setSaving(true)
+    if (!lock()) return
     setFailure(null)
     try {
       await (id ? api.updateProduct(id, input) : api.createProduct(input))
       navigate('/admin/productos', { state: { notice: 'Producto guardado' } })
     } catch {
       setFailure('No pudimos guardar el producto. Intenta de nuevo.')
-      busy.current = false
-      setSaving(false)
+      unlock()
     }
   }
 

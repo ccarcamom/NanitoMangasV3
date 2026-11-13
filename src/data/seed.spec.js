@@ -30,6 +30,6 @@ describe('seed', () => {
     expect(ADMIN_EMAIL).toBe('admin@nanitomangas.cl')
     expect(ADMIN_PASSWORD).toBe('Admin1234')
     expect(ADMIN_SEED_HASH).toMatch(/^[0-9a-f]{64}$/)
-    expect(seedUsers[0]).toEqual(jasmine.objectContaining({ id: 'user-admin', role: 'admin', email: ADMIN_EMAIL, passwordHash: ADMIN_SEED_HASH }))
+    expect(seedUsers[0]).toEqual(expect.objectContaining({ id: 'user-admin', role: 'admin', email: ADMIN_EMAIL, passwordHash: ADMIN_SEED_HASH }))
   })
 })

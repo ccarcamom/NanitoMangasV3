@@ -68,7 +68,7 @@ describe('OrderSuccess', () => {
     const ordersApi = createOrdersApi({ storage, productsApi, cartApi })
     cartApi.addToCart('manga-1', 2)
     const placed = ordersApi.placeOrder({ email: 'a@b.cl', buyer: { name: 'Ana', rut: '12345678-5' }, delivery: { method: 'retiro', address: null } })
-    const spy = spyOn(ordersApi, 'placeOrder').and.callThrough()
+    const spy = vi.spyOn(ordersApi, 'placeOrder')
     const stock = productsApi.getProduct('manga-1').stock
     setup(placed.id, ordersApi.getOrder)
     cleanup()
