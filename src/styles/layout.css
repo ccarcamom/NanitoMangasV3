@@ -41,6 +41,7 @@
 }
 
 .site-logo__mascot { height: 2rem; width: auto; image-rendering: pixelated; }
+.site-logo__mascot--dark { height: 2.5rem; image-rendering: auto; } /* Kaneki viene reducido de una imagen grande: suavizado, no píxeles duros */
 
 .site-logo:hover { color: var(--nm-ink); }
 

@@ -31,6 +31,27 @@ describe('Header', () => {
     expect(nav.querySelector('.nav-link.active').textContent).toBe('Ofertas')
   })
 
+  it('la_mascota_del_logo_cambia_a_Kaneki_en_modo_oscuro_y_vuelve_en_claro', () => {
+    const { storage, api } = createFakeShop()
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <ThemeProvider storage={storage}>
+          <AuthProvider api={createFakeAuthApi().api}>
+            <CartProvider api={api}><Header /></CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </MemoryRouter>,
+    )
+    const mascot = () => screen.getByRole('link', { name: /NanitoMangas/ }).querySelector('img')
+    expect(mascot().getAttribute('src')).toBe('/img/happy.png')
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar a modo oscuro' }))
+    expect(mascot().getAttribute('src')).toBe('/img/kaneki.png')
+    expect(mascot().classList.contains('site-logo__mascot--dark')).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar a modo claro' }))
+    expect(mascot().getAttribute('src')).toBe('/img/happy.png')
+    expect(mascot().classList.contains('site-logo__mascot--dark')).toBe(false)
+  })
+
   it('Header_Memes_ofrece_Crear_y_Biblioteca', () => {
     const { storage, api } = createFakeShop()
     render(

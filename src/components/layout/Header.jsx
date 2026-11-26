@@ -5,11 +5,18 @@ import { CaretDown, IdentificationBadge, List, SignOut, Storefront, User } from 
 import { getCategory } from '../../lib/catalog.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useCart } from '../../context/CartContext.jsx'
+import { useTheme } from '../../context/ThemeContext.jsx'
 import SearchBar from './SearchBar.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import CartButton from './CartButton.jsx'
 
 const genres = getCategory('mangas').genres
+
+// La mascota del logo cambia con el tema: la de siempre en claro y Kaneki en oscuro.
+const MASCOTS = {
+  light: { src: '/img/happy.png', width: 30, height: 40, className: 'site-logo__mascot' },
+  dark: { src: '/img/kaneki.png', width: 181, height: 160, className: 'site-logo__mascot site-logo__mascot--dark' },
+}
 
 const links = [
   ['/categoria/funko', 'Funko Pop'],
@@ -24,6 +31,7 @@ const PANELS = { ADMIN: '/admin', VENDEDOR: '/vendedor' }
 
 export default function Header() {
   const { count } = useCart()
+  const { theme } = useTheme()
   const { user, ready, logout } = useAuth()
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
@@ -40,7 +48,7 @@ export default function Header() {
         <Navbar.Toggle aria-controls="main-menu" label="Abrir menú" className="icon-btn d-lg-none">
           <List size={26} aria-hidden="true" />
         </Navbar.Toggle>
-        <Link to="/" className="site-logo">NanitoMangas<img className="site-logo__mascot" src="/img/happy.png" alt="" width="30" height="40" /></Link>
+        <Link to="/" className="site-logo">NanitoMangas<img {...MASCOTS[theme]} alt="" /></Link>
         <SearchBar className="d-none d-lg-flex flex-grow-1" value={query} onChange={setQuery} onSearch={goSearch} />
         <div className="site-icons">
           {!ready ? (
