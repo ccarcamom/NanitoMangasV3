@@ -2,9 +2,22 @@
 
 Tienda online de mangas, Funko Pop, figuras y accesorios. Proyecto del curso Fullstack 2 (DSY1104).
 
-Es una aplicación React que consume un backend propio en Spring Boot: un API Gateway y tres microservicios (administración, vendedores y clientes) sobre MongoDB, en el repositorio hermano `nanitomangas-backend`. Se puede navegar el catálogo, buscar, filtrar, leer un avance de manga, comprar con pago ficticio, crear una cuenta, ver pedidos, administrar productos como vendedor o administrador, y crear memes sobre páginas de manga. Los roles son invitado, CLIENTE, VENDEDOR y ADMIN, con JWT de acceso y renovación.
+Es una aplicación React que consume un backend propio en Spring Boot: un API Gateway y tres microservicios (administración, vendedores y clientes) sobre MongoDB, en el repositorio hermano [Backend_NanitoMangasV3](https://github.com/ccarcamom/Backend_NanitoMangasV3). Se puede navegar el catálogo, buscar, filtrar, leer un avance de manga, comprar con pago ficticio, crear una cuenta, ver pedidos, administrar productos como vendedor o administrador, y crear memes sobre páginas de manga. Los roles son invitado, CLIENTE, VENDEDOR y ADMIN, con JWT de acceso y renovación.
 
-Los documentos de la entrega (ERS, APIs, integración, manual de usuario y cobertura de testing) se entregan como documentos aparte.
+## Documentación
+
+Los documentos de la entrega están en la carpeta [`docs/`](docs/):
+
+- [Especificación de Requisitos del Software (ERS)](docs/ERS.pdf)
+- [Manual de usuario](docs/manual-de-usuario.pdf)
+- [Documentación de APIs](docs/documentacion-de-apis.pdf)
+- [APIs e Integración](docs/apis-e-integracion.pdf)
+
+## Autores
+
+- Eloy Aspe
+- Cristóbal Cárcamo
+- Tomás Salas
 
 ## Stack
 
@@ -139,8 +152,8 @@ tos.
 
 ## Limitaciones conocidas
 
-- **Lector de avances y editor de memes:** dependen del proxy de MangaDex (`vite/mangadexProxy.js`), que solo existe con `npm run dev` y `npm run preview`. No funcionan en un hosting estático ni con `dist/` servido por otro servidor.
-- **MangaDex:** su contenido es de terceros; se usa solo como ejercicio local y no se almacena (de un meme solo se guarda la receta: página, recuadros y estilo). La detección de globos es aproximada: puede fallar o sobrar un recuadro, por eso se pueden dibujar a mano.
+- **Lector de avances y editor de memes:** dependen del proxy de MangaDex (`vite/mangadexProxy.js`). Corre con `npm run dev` y `npm run preview` y, en el despliegue en AWS, como el contenedor `mdx` detrás de nginx (`deploy/`). No funcionan en un hosting estático puro ni con `dist/` servido sin ese proxy.
+- **MangaDex:** su contenido es de terceros; se usa como ejercicio de clase y no se almacena (de un meme solo se guarda la receta: página, recuadros y estilo). La detección de globos es aproximada: puede fallar o sobrar un recuadro, por eso se pueden dibujar a mano.
 - **Pago:** es simulado en el navegador y ocurre antes de crear el pedido; no hay cobro ni pasarela. Los datos de la tarjeta nunca se guardan ni se envían.
 - **Sesión:** los tokens están en `localStorage`; el token de renovación no se revoca hasta que vence (7 días).
 - **Compra de invitado:** el comprobante se recupera al recargar solo en la misma pestaña (`sessionStorage`).
