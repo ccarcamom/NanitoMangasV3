@@ -1,0 +1,21 @@
+# Frontend en producción (misma instancia EC2 que el backend).
+# Uso: docker compose -f docker-compose.prod.yml up -d --build
+# BACKEND_URL por defecto apunta al gateway que corre en el mismo servidor (puerto 8080).
+services:
+  mdx:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.mdx
+    restart: unless-stopped
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mdx
