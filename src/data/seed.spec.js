@@ -1,4 +1,4 @@
-import { seedProducts, categories, banners, seedUsers, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SEED_HASH } from './seed.js'
+import { seedProducts, categories, banners } from './seed.js'
 
 describe('seed', () => {
   it('cada categoría tiene al menos 2 productos', () => {
@@ -25,11 +25,5 @@ describe('seed', () => {
       expect(typeof p.description).toBe('string')
     })
   })
-  it('banners y admin', () => {
-    expect(banners.length).toBe(2)
-    expect(ADMIN_EMAIL).toBe('admin@nanitomangas.cl')
-    expect(ADMIN_PASSWORD).toBe('Admin1234')
-    expect(ADMIN_SEED_HASH).toMatch(/^[0-9a-f]{64}$/)
-    expect(seedUsers[0]).toEqual(expect.objectContaining({ id: 'user-admin', role: 'admin', email: ADMIN_EMAIL, passwordHash: ADMIN_SEED_HASH }))
-  })
+  it('hay dos banners', () => { expect(banners.length).toBe(2) })
 })

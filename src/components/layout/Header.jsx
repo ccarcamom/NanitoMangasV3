@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { Container, Nav, Navbar, NavDropdown, Offcanvas } from 'react-bootstrap'
-import { CaretDown, List, SignOut, User } from '@phosphor-icons/react'
+import { CaretDown, IdentificationBadge, List, SignOut, Storefront, User } from '@phosphor-icons/react'
 import { getCategory } from '../../lib/catalog.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useCart } from '../../context/CartContext.jsx'
@@ -19,6 +19,8 @@ const links = [
   ['/novedades', 'Novedades'],
   ['/contacto', 'Contacto'],
 ]
+
+const PANELS = { ADMIN: '/admin', VENDEDOR: '/vendedor' }
 
 export default function Header() {
   const { count } = useCart()
@@ -49,10 +51,16 @@ export default function Header() {
               <Link to="/cuenta" className="account-link" title={user.name}>
                 <User size={22} aria-hidden="true" /><span className="account-link__name account-link__label">{user.name.trim().split(/\s+/)[0]}</span>
               </Link>
+              {PANELS[user.role] && (
+                <Link to={PANELS[user.role]} className="account-link"><Storefront size={22} aria-hidden="true" /><span className="account-link__label">Panel</span></Link>
+              )}
               <button type="button" className="icon-btn account-exit" onClick={logout} aria-label="Salir" title="Salir"><SignOut size={22} aria-hidden="true" /></button>
             </>
           ) : (
-            <Link to="/ingresar" className="account-link"><User size={22} aria-hidden="true" /><span className="account-link__label">Ingresar</span></Link>
+            <>
+              <Link to="/ingresar" className="account-link"><User size={22} aria-hidden="true" /><span className="account-link__label">Ingresar</span></Link>
+              <Link to="/ingresar/personal" className="account-link account-link--staff d-none d-lg-inline-flex"><IdentificationBadge size={22} aria-hidden="true" /><span className="account-link__label">Personal</span></Link>
+            </>
           )}
           <ThemeToggle />
           <CartButton count={count} />
@@ -80,7 +88,16 @@ export default function Header() {
                 <NavDropdown.Divider />
                 <NavDropdown.Item as={Link} to="/categoria/mangas">Ver todo</NavDropdown.Item>
               </NavDropdown>
+              <NavDropdown
+                id="nav-memes"
+                title={<>Memes <CaretDown size={11} weight="bold" aria-hidden="true" /></>}
+                active={pathname.startsWith('/memes')}
+              >
+                <NavDropdown.Item as={Link} to="/memes/crear">Crear</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/memes/biblioteca">Biblioteca</NavDropdown.Item>
+              </NavDropdown>
               {links.map(([to, label]) => <Nav.Link key={to} as={NavLink} to={to}>{label}</Nav.Link>)}
+              {ready && !user && <Nav.Link as={NavLink} to="/ingresar/personal" className="d-lg-none">Acceso de personal</Nav.Link>}
             </Nav>
           </Offcanvas.Body>
         </Navbar.Offcanvas>

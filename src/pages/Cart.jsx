@@ -6,7 +6,7 @@ import CartSummary from '../components/shop/CartSummary.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
 
 export default function Cart() {
-  const { lines, missing, blocked, setQty, remove, totals } = useCart()
+  const { lines, missing, blocked, loading, error, setQty, remove, totals } = useCart()
   const [method, setMethod] = useState('despacho')
   const [adjusted, setAdjusted] = useState([])
 
@@ -18,11 +18,20 @@ export default function Cart() {
     setAdjusted((ids) => [...new Set([...ids, ...over.map((l) => l.product.id)])])
   }, [lines, setQty])
 
+  if (loading || error) {
+    return (
+      <section className="container page">
+        <h1 className="page__title">Tu carro</h1>
+        {loading ? <EmptyState title="Cargando productos…" /> : <EmptyState title="No pudimos cargar los productos" />}
+      </section>
+    )
+  }
+
   if (lines.length === 0 && missing.length === 0) {
     return (
       <section className="container page">
         <h1 className="page__title">Tu carro</h1>
-        <EmptyState title="Tu carro está vacío" text="Agrega productos para verlos aquí." action={<Link className="btn btn-primary" to="/">Ver productos</Link>} />
+        <EmptyState title="Tu carro está vacío" action={<Link className="btn btn-primary" to="/">Ver productos</Link>} />
       </section>
     )
   }

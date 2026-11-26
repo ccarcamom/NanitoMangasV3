@@ -2,12 +2,9 @@ import { render, screen, fireEvent, cleanup, waitFor, within } from '@testing-li
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { CartProvider } from '../context/CartContext.jsx'
 import { AuthProvider } from '../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../data/fakeAuthApi.js'
-import { createStorage } from '../data/storage.js'
-import { fakeBackend } from '../data/fakeBackend.js'
-import { createProductsApi } from '../data/products.js'
-import { createCartApi } from '../data/cart.js'
-import { createOrdersApi } from '../data/orders.js'
+import { createFakeAuthApi } from '../api/fakeAuthApi.js'
+import { createFakeShop } from '../api/fakeShop.js'
+import { flush } from '../../test/flush.js'
 import { simulatePayment } from '../lib/payment.js'
 import Checkout from './Checkout.jsx'
 
@@ -24,7 +21,7 @@ const deferred = () => {
 }
 
 describe('Checkout', () => {
-  let backend, storage, productsApi, cartApi, api, auth, deps
+  let shop, backend, productsApi, cartApi, api, auth, deps
   const setup = () => render(
     <MemoryRouter initialEntries={['/checkout']}>
       <AuthProvider api={auth}>
@@ -58,7 +55,7 @@ describe('Checkout', () => {
   const fill = ({ rut, number } = {}) => { fillBuyer(rut); fillAddress(); fillCard(number) }
   // Pedido real sobre el storage falso y pago real sin espera.
   const useRealDeps = () => {
-    const ordersApi = createOrdersApi({ storage, productsApi, cartApi })
+    const { ordersApi } = shop
     deps = { placeOrder: ordersApi.placeOrder, simulatePayment: (card) => simulatePayment(card, 0) }
     return ordersApi
   }
@@ -68,30 +65,29 @@ describe('Checkout', () => {
   const summary = () => within(screen.getByRole('region', { name: 'Tu pedido' }))
 
   beforeEach(() => {
-    backend = fakeBackend()
-    storage = createStorage(backend)
-    productsApi = createProductsApi(storage)
-    cartApi = createCartApi(storage, productsApi)
-    api = { ...productsApi, ...cartApi }
+    shop = createFakeShop()
+    ;({ backend, productsApi, cartApi, api } = shop)
     auth = createFakeAuthApi().api
     deps = {
       simulatePayment: vi.fn().mockResolvedValue({ ok: true }),
-      placeOrder: vi.fn().mockReturnValue({ id: 'NM-000007' }),
+      placeOrder: vi.fn().mockResolvedValue({ id: 'NM-000007' }),
     }
     cartApi.addToCart('manga-1', 2) // 2 x $10.990
   })
   afterEach(cleanup)
 
-  it('carro vacío muestra el estado vacío', () => {
+  it('carro vacío muestra el estado vacío', async () => {
     cartApi.clearCart()
     setup()
+    await flush()
     expect(screen.getByText('Tu carro está vacío')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Ver productos' }).getAttribute('href')).toBe('/')
     expect(screen.queryByRole('button', { name: /^Pagar/ })).toBeNull()
   })
 
-  it('invitado: campos vacíos, resumen con líneas y total en el botón, aviso de pago simulado', () => {
+  it('invitado: campos vacíos, resumen con líneas y total en el botón', async () => {
     setup()
+    await flush()
     expect(screen.getByRole('heading', { level: 1, name: 'Pagar' })).toBeTruthy()
     expect(screen.getByLabelText('Nombre').value).toBe('')
     expect(screen.getByLabelText('Correo').value).toBe('')
@@ -102,15 +98,14 @@ describe('Checkout', () => {
     expect(summary().getByText('Envío').nextSibling.textContent).toBe('$3.990')
     expect(summary().getByText('Total').nextSibling.textContent).toBe('$25.970')
     expect(payButton().textContent).toBe('Pagar $25.970')
-    expect(screen.getByText('Pago simulado: no se realiza ningún cobro real')).toBeTruthy()
     expect(screen.queryByText(/4000 0000 0000 0002/)).toBeNull()
   })
 
   it('con sesión rellena nombre, correo, RUT y dirección del perfil', async () => {
-    const user = await auth.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
-    auth.updateProfile(user.id, { rut: '12345678-5', address: { street: 'Calle 1', comuna: 'Viña del Mar', region: 'Región de Valparaíso' } })
-    auth.setSession(user.id)
+    await auth.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
+    await auth.updateProfile({ rut: '12345678-5', address: { street: 'Calle 1', comuna: 'Viña del Mar', region: 'Región de Valparaíso' } })
     setup()
+    await flush()
     await screen.findByDisplayValue('Ana Pérez')
     expect(screen.getByLabelText('Correo').value).toBe('ana@mail.cl')
     expect(screen.getByLabelText('RUT').value).toBe('12345678-5')
@@ -119,8 +114,9 @@ describe('Checkout', () => {
     expect(screen.getByLabelText('Comuna').value).toBe('Viña del Mar')
   })
 
-  it('RUT inválido muestra el error, enfoca el campo y no llama a simulatePayment', () => {
+  it('RUT inválido muestra el error, enfoca el campo y no llama a simulatePayment', async () => {
     setup()
+    await flush()
     fill({ rut: '12345678-9' })
     fireEvent.click(payButton())
     expect(screen.getByText('Ingresa un RUT válido.')).toBeTruthy()
@@ -128,8 +124,9 @@ describe('Checkout', () => {
     expect(deps.simulatePayment).not.toHaveBeenCalled()
   })
 
-  it('formulario vacío marca cada obligatorio bajo su campo y enfoca el primero', () => {
+  it('formulario vacío marca cada obligatorio bajo su campo y enfoca el primero', async () => {
     setup()
+    await flush()
     fireEvent.click(payButton())
     const expected = [
       ['Nombre', 'Ingresa tu nombre.'], ['Correo', 'Ingresa un correo válido.'], ['RUT', 'Ingresa un RUT válido.'],
@@ -151,8 +148,9 @@ describe('Checkout', () => {
     ['Vencimiento (MM/AA)', '13/30', 'Ingresa un vencimiento válido (MM/AA).'],
     ['Número de tarjeta', '4242 4242 4242 4241', 'Ingresa un número de tarjeta válido.'],
   ].forEach(([label, bad, message]) => {
-    it(`${label} inválido (${bad}) no llama a simulatePayment`, () => {
+    it(`${label} inválido (${bad}) no llama a simulatePayment`, async () => {
       setup()
+      await flush()
       fill()
       change(label, bad)
       fireEvent.click(payButton())
@@ -164,6 +162,7 @@ describe('Checkout', () => {
 
   it('con "Retiro en tienda" la dirección vacía no se exige y el pago sigue', async () => {
     setup()
+    await flush()
     fillBuyer()
     fireEvent.click(screen.getByRole('radio', { name: 'Retiro en tienda' }))
     fillCard()
@@ -173,8 +172,9 @@ describe('Checkout', () => {
     expect(deps.placeOrder.mock.calls[0][0].delivery).toEqual({ method: 'retiro', address: null })
   })
 
-  it('corregir un campo borra solo su error', () => {
+  it('corregir un campo borra solo su error', async () => {
     setup()
+    await flush()
     fireEvent.click(payButton())
     change('Nombre', 'Ana')
     expect(screen.queryByText('Ingresa tu nombre.')).toBeNull()
@@ -182,8 +182,9 @@ describe('Checkout', () => {
     expect(screen.getByText('Ingresa un número de tarjeta válido.')).toBeTruthy()
   })
 
-  it('"Retiro en tienda" oculta la dirección, envío $0 y cambia el total', () => {
+  it('"Retiro en tienda" oculta la dirección, envío $0 y cambia el total', async () => {
     setup()
+    await flush()
     fireEvent.click(screen.getByRole('radio', { name: 'Retiro en tienda' }))
     expect(screen.queryByLabelText('Calle y número')).toBeNull()
     expect(summary().getByText('Envío').nextSibling.textContent).toBe('$0')
@@ -195,6 +196,7 @@ describe('Checkout', () => {
     const pay = deferred()
     deps.simulatePayment.mockReturnValue(pay.promise)
     setup()
+    await flush()
     fill()
     const form = payButton().closest('form')
     fireEvent.submit(form)
@@ -205,17 +207,20 @@ describe('Checkout', () => {
     pay.resolve({ ok: true })
     await screen.findByText('exito /compra-exitosa/NM-000007')
     expect(deps.placeOrder).toHaveBeenCalledTimes(1)
+    // sin userId: el servidor lo toma del token; el total tampoco viaja
     expect(deps.placeOrder).toHaveBeenCalledWith({
-      userId: null, email: 'ana@mail.cl', buyer: { name: 'Ana Pérez', rut: '12345678-5' },
+      email: 'ana@mail.cl', buyer: { name: 'Ana Pérez', rut: '12345678-5' },
       delivery: { method: 'despacho', address: { street: 'Calle 1', comuna: 'Viña del Mar', region: 'Región de Valparaíso' } },
+      items: [{ productId: 'manga-1', qty: 2 }],
     })
     const card = deps.simulatePayment.mock.calls[0][0]
     expect(card).toEqual({ number: '4242 4242 4242 4242', expiry: '12/30', cvv: '123' })
   })
 
   it('OUT_OF_STOCK: avisa nombrando el producto, no navega y el botón vuelve a servir (Review Focus 2)', async () => {
-    deps.placeOrder.mockImplementation(() => { throw new Error('OUT_OF_STOCK:manga-1') })
+    deps.placeOrder.mockRejectedValue(new Error('OUT_OF_STOCK:manga-1'))
     setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     const alert = await screen.findByText('One Piece - Tomo 1 ya no tiene stock suficiente. Revisa tu carro.')
@@ -230,26 +235,42 @@ describe('Checkout', () => {
   })
 
   it('OUT_OF_STOCK de un producto que no está en el carro usa "Un producto"', async () => {
-    deps.placeOrder.mockImplementation(() => { throw new Error('OUT_OF_STOCK:otro') })
+    deps.placeOrder.mockRejectedValue(new Error('OUT_OF_STOCK:otro'))
     setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     expect(await screen.findByText('Un producto ya no tiene stock suficiente. Revisa tu carro.')).toBeTruthy()
   })
 
-  it('otro error muestra el aviso genérico y libera el botón', async () => {
-    deps.placeOrder.mockImplementation(() => { throw new Error('BOOM') })
+  it('PRODUCT_NOT_FOUND nombra el producto del carro y, si no está, usa "Un producto"', async () => {
+    deps.placeOrder.mockRejectedValue(new Error('PRODUCT_NOT_FOUND:manga-1'))
     setup()
+    await flush()
+    fill()
+    fireEvent.click(payButton())
+    expect(await screen.findByText('One Piece - Tomo 1 ya no está disponible. Revisa tu carro.')).toBeTruthy()
+    expect(payButton().disabled).toBe(false)
+    deps.placeOrder.mockRejectedValue(new Error('PRODUCT_NOT_FOUND:otro'))
+    fireEvent.click(payButton())
+    expect(await screen.findByText('Un producto ya no está disponible. Revisa tu carro.')).toBeTruthy()
+  })
+
+  it('otro error muestra el aviso genérico y libera el botón', async () => {
+    deps.placeOrder.mockRejectedValue(new Error('BOOM'))
+    setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     expect(await screen.findByText('No pudimos completar la compra. Intenta de nuevo.')).toBeTruthy()
     expect(payButton().disabled).toBe(false)
   })
 
-  it('producto borrado en el carro: aviso y "Pagar" deshabilitado', () => {
+  it('producto borrado en el carro: aviso y "Pagar" deshabilitado', async () => {
     cartApi.addToCart('funko-1', 1)
     productsApi.deleteProduct('funko-1')
     setup()
+    await flush()
     const warn = screen.getByText(/Revisa tu carro antes de pagar/).closest('[role=alert]')
     expect(within(warn).getByRole('link').getAttribute('href')).toBe('/carro')
     expect(payButton().disabled).toBe(true)
@@ -262,6 +283,7 @@ describe('Checkout', () => {
     it(`${title}: aviso, "Pagar" deshabilitado y un submit forzado no paga ni crea pedido`, async () => {
       productsApi.updateProduct('manga-1', { stock }) // el carro ya tiene 2 unidades
       setup()
+      await flush()
       expect(screen.getByText(/Revisa tu carro antes de pagar/)).toBeTruthy()
       expect(payButton().disabled).toBe(true)
       fill()
@@ -276,6 +298,7 @@ describe('Checkout', () => {
   it('si simulatePayment rechaza: aviso genérico, sin pedido y el botón vuelve a servir', async () => {
     deps.simulatePayment.mockRejectedValue(new Error('red'))
     setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     expect(await screen.findByText('No pudimos completar la compra. Intenta de nuevo.')).toBeTruthy()
@@ -290,6 +313,7 @@ describe('Checkout', () => {
   it('EMPTY_CART: muestra el carro vacío y no navega', async () => {
     deps.placeOrder.mockImplementation(() => { cartApi.clearCart(); throw new Error('EMPTY_CART') })
     setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     expect(await screen.findByText('Tu carro está vacío')).toBeTruthy()
@@ -300,6 +324,7 @@ describe('Checkout', () => {
   it('CARD_DECLINED va a /pago-fallido con el motivo, sin crear pedido ni vaciar el carro', async () => {
     deps.simulatePayment.mockResolvedValue({ ok: false, reason: 'CARD_DECLINED' })
     setup()
+    await flush()
     fill({ number: '4000 0000 0000 0002' })
     fireEvent.click(payButton())
     await screen.findByText('fallo /pago-fallido CARD_DECLINED')
@@ -312,11 +337,11 @@ describe('Checkout', () => {
     cartApi.clearCart()
     cartApi.addToCart('manga-2', 1) // precio 12.990, oferta 9.990, stock 8
     setup()
+    await flush()
     fill()
     fireEvent.click(payButton())
     await screen.findByText('exito /compra-exitosa/NM-000001')
-    const saved = ordersApi.getOrder('NM-000001')
-    expect(saved.userId).toBeNull()
+    const saved = await ordersApi.getOrder('NM-000001')
     expect(saved.items).toEqual([{ productId: 'manga-2', name: 'Vagabond - Tomo 1', unitPrice: 9990, qty: 1 }])
     expect([saved.subtotal, saved.shipping, saved.total]).toEqual([9990, 3990, 13980])
     expect(saved.delivery).toEqual({ method: 'despacho', address: { street: 'Calle 1', comuna: 'Viña del Mar', region: 'Región de Valparaíso' } })
@@ -324,18 +349,18 @@ describe('Checkout', () => {
     expect(cartApi.getCart()).toEqual([])
   })
 
-  it('integración: con sesión el pedido guarda el userId y los datos prellenados', async () => {
+  it('integración: con sesión el pedido lleva los datos prellenados y el total es el del servidor', async () => {
     const ordersApi = useRealDeps()
-    const user = await auth.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
-    auth.updateProfile(user.id, { rut: '11111111-1', address: { street: 'Av. Siempre 742', comuna: 'Providencia', region: 'Región Metropolitana de Santiago' } })
-    auth.setSession(user.id)
+    await auth.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
+    await auth.updateProfile({ rut: '11111111-1', address: { street: 'Av. Siempre 742', comuna: 'Providencia', region: 'Región Metropolitana de Santiago' } })
     setup()
+    await flush()
     await screen.findByDisplayValue('Ana Pérez')
     fillCard()
     fireEvent.click(payButton())
     await screen.findByText('exito /compra-exitosa/NM-000001')
-    const saved = ordersApi.getOrder('NM-000001')
-    expect(saved.userId).toBe(user.id)
+    const saved = await ordersApi.getOrder('NM-000001')
+    expect(saved.total).toBe(25970)
     expect(saved.email).toBe('ana@mail.cl')
     expect(saved.buyer).toEqual({ name: 'Ana Pérez', rut: '11111111-1' })
     expect(saved.delivery.address).toEqual({ street: 'Av. Siempre 742', comuna: 'Providencia', region: 'Región Metropolitana de Santiago' })
@@ -345,16 +370,30 @@ describe('Checkout', () => {
   it('integración: pago real y pedido real sobre storage falso descuentan stock y vacían el carro', async () => {
     const ordersApi = useRealDeps()
     setup()
+    await flush()
     fill()
     fireEvent.click(screen.getByRole('radio', { name: 'Retiro en tienda' }))
     fireEvent.click(payButton())
     await screen.findByText('exito /compra-exitosa/NM-000001')
     expect(productsApi.getProduct('manga-1').stock).toBe(10)
     expect(cartApi.getCart()).toEqual([])
-    const saved = ordersApi.getOrder('NM-000001')
+    const saved = await ordersApi.getOrder('NM-000001')
     expect(saved.buyer).toEqual({ name: 'Ana Pérez', rut: '12345678-5' })
     expect(saved.delivery).toEqual({ method: 'retiro', address: null })
     expect(saved.total).toBe(21980)
     expect(JSON.stringify(backend.data)).not.toContain('4242')
+  })
+
+  it('integración: un 409 del servidor muestra el mensaje de stock agotado, no vacía el carro y refresca el stock', async () => {
+    useRealDeps()
+    setup()
+    await flush()
+    productsApi.updateProduct('manga-1', { stock: 1 }) // otro cliente compró mientras tanto
+    fill()
+    fireEvent.click(payButton())
+    expect(await screen.findByText('One Piece - Tomo 1 ya no tiene stock suficiente. Revisa tu carro.')).toBeTruthy()
+    expect(cartApi.getCart()).toEqual([{ productId: 'manga-1', qty: 2 }])
+    await waitFor(() => expect(screen.getByText(/Revisa tu carro antes de pagar/)).toBeTruthy()) // tras recargar, 2 > stock 1
+    expect(payButton().disabled).toBe(true)
   })
 })

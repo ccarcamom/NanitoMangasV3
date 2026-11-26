@@ -3,7 +3,7 @@ import ProductCard from './ProductCard.jsx'
 
 export default function ProductGrid({ products, onAdd }) {
   if (products.length === 0) {
-    return <EmptyState title="No encontramos productos" text="Prueba con otros filtros o vuelve más tarde." />
+    return <EmptyState title="No encontramos productos" />
   }
   return (
     <div className="row g-3 g-lg-4">

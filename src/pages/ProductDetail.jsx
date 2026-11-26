@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router'
+import { BookOpenText } from '@phosphor-icons/react'
 import { useProducts } from '../hooks/useProducts.js'
 import { useCart } from '../context/CartContext.jsx'
 import { formatCLP } from '../lib/money.js'
@@ -10,11 +11,19 @@ import EmptyState from '../components/common/EmptyState.jsx'
 const stockLabel = (n) => (n === 0 ? 'Agotado' : n <= 5 ? `Quedan ${n} ${n === 1 ? 'unidad' : 'unidades'}` : 'Disponible')
 
 export default function ProductDetail({ products: given }) {
-  const stored = useProducts()
+  const { data: stored, loading, error } = useProducts()
   const { add } = useCart()
   const { id } = useParams()
   const all = given ?? stored
   const product = all.find((p) => p.id === id)
+
+  if (!product && !given && (loading || error)) {
+    return (
+      <section className="container page">
+        {loading ? <EmptyState title="Cargando productos…" /> : <EmptyState title="No pudimos cargar los productos" />}
+      </section>
+    )
+  }
 
   if (!product) {
     return (
@@ -58,6 +67,11 @@ export default function ProductDetail({ products: given }) {
           <p className={`detail__stock${stock <= 5 ? ' is-low' : ''}`}>{stockLabel(stock)}</p>
           <p>{description}</p>
           <BuyBox key={id} product={product} />
+          {categoryId === 'mangas' && (
+            <Link className="btn btn-outline-secondary d-inline-flex align-items-center gap-2" to={`/leer/${id}`}>
+              <BookOpenText size={20} aria-hidden="true" />Leer avance
+            </Link>
+          )}
         </div>
       </div>
       {related.length > 0 && (

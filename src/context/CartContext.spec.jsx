@@ -1,34 +1,31 @@
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react'
 import { CartProvider, useCart } from './CartContext.jsx'
-import { createStorage } from '../data/storage.js'
-import { fakeBackend } from '../data/fakeBackend.js'
-import { createProductsApi } from '../data/products.js'
-import { createCartApi } from '../data/cart.js'
+import { createFakeShop } from '../api/fakeShop.js'
+import { flush } from '../../test/flush.js'
 
 function Probe() {
-  const { count, lines, missing, add, totals } = useCart()
+  const { count, lines, missing, loading, add, reload, totals } = useCart()
   return (
     <div>
       <span data-testid="count">{count}</span>
       <span data-testid="lines">{lines.length}</span>
       <span data-testid="missing">{missing.join(',')}</span>
+      <span data-testid="loading">{String(loading)}</span>
       <span data-testid="subtotal">{totals('retiro').subtotal}</span>
       <button type="button" onClick={() => add('manga-1')}>add</button>
+      <button type="button" onClick={reload}>reload</button>
     </div>
   )
 }
 
 describe('CartContext', () => {
   let api
-  beforeEach(() => {
-    const storage = createStorage(fakeBackend())
-    const productsApi = createProductsApi(storage)
-    api = { ...productsApi, ...createCartApi(storage, productsApi) }
-  })
+  beforeEach(() => { api = createFakeShop().api })
   afterEach(cleanup)
 
-  it('add aumenta count y recalcula las líneas', () => {
+  it('add aumenta count y recalcula las líneas', async () => {
     render(<CartProvider api={api}><Probe /></CartProvider>)
+    await flush()
     expect(screen.getByTestId('count').textContent).toBe('0')
     fireEvent.click(screen.getByText('add'))
     fireEvent.click(screen.getByText('add'))
@@ -38,12 +35,26 @@ describe('CartContext', () => {
     expect(screen.getByTestId('subtotal').textContent).toBe(String(price * 2))
   })
 
-  it('saca de lines un producto borrado y lo informa en missing', () => {
+  it('saca de lines un producto borrado (al recargar) y lo informa en missing', async () => {
     render(<CartProvider api={api}><Probe /></CartProvider>)
+    await flush()
     fireEvent.click(screen.getByText('add'))
     act(() => { api.deleteProduct('manga-1') })
+    fireEvent.click(screen.getByText('reload'))
+    await flush()
     expect(screen.getByTestId('lines').textContent).toBe('0')
     expect(screen.getByTestId('count').textContent).toBe('0')
     expect(screen.getByTestId('missing').textContent).toBe('manga-1')
+  })
+
+  it('mientras cargan los productos no declara nada como no disponible', async () => {
+    api.addToCart('manga-1', 1)
+    render(<CartProvider api={api}><Probe /></CartProvider>)
+    expect(screen.getByTestId('loading').textContent).toBe('true')
+    expect(screen.getByTestId('missing').textContent).toBe('')
+    expect(screen.getByTestId('count').textContent).toBe('1')
+    await flush()
+    expect(screen.getByTestId('loading').textContent).toBe('false')
+    expect(screen.getByTestId('lines').textContent).toBe('1')
   })
 })

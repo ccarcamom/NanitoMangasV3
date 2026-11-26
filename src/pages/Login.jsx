@@ -1,55 +1,11 @@
-import { useState } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router'
-import { useAuth } from '../context/AuthContext.jsx'
-import { isValidEmail } from '../lib/validators.js'
-import FormField from '../components/forms/FormField.jsx'
-import { bindFields } from '../components/forms/formHelpers.js'
-import { useSubmitLock } from '../hooks/useSubmitLock.js'
-
-const validate = (v) => ({
-  ...(!isValidEmail(v.email.trim()) && { email: 'Ingresa un correo válido.' }),
-  ...(!v.password && { password: 'Ingresa tu contraseña.' }),
-})
+import { Link } from 'react-router'
+import LoginForm from '../components/forms/LoginForm.jsx'
 
 export default function Login() {
-  const { user, login } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [values, setValues] = useState({ email: '', password: '' })
-  const [errors, setErrors] = useState({})
-  const [formError, setFormError] = useState('')
-  const { pending: submitting, lock, unlock } = useSubmitLock()
-
-  if (user && !submitting) return <Navigate to="/cuenta" replace />
-
-  const bind = bindFields(values, errors, setValues)
-
-  const submit = async (e) => {
-    e.preventDefault()
-    const found = validate(values)
-    setErrors(found)
-    setFormError('')
-    if (Object.keys(found).length) return
-    if (!lock()) return
-    try {
-      await login(values.email, values.password)
-      navigate(location.state?.from?.pathname ?? '/', { replace: true })
-    } catch (err) {
-      setFormError(err.message === 'INVALID_CREDENTIALS' ? 'Correo o contraseña incorrectos' : 'No pudimos ingresar, intenta de nuevo')
-      unlock()
-    }
-  }
-
   return (
-    <section className="container page page--narrow">
-      <h1 className="page__title">Ingresar</h1>
-      <form onSubmit={submit} noValidate>
-        {formError && <div className="alert-nm" role="alert">{formError}</div>}
-        <FormField label="Correo" type="email" autoComplete="email" {...bind('email')} />
-        <FormField label="Contraseña" type="password" autoComplete="current-password" {...bind('password')} />
-        <button type="submit" className="btn btn-primary" disabled={submitting}>Ingresar</button>
-      </form>
+    <LoginForm title="Ingresar">
+      <p className="page__alt">¿Eres vendedor o administrador? <Link to="/ingresar/personal">Acceso de personal</Link></p>
       <p className="page__alt">¿No tienes cuenta? <Link to="/registro">Crea una cuenta</Link></p>
-    </section>
+    </LoginForm>
   )
 }

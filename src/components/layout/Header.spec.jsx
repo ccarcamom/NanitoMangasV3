@@ -2,12 +2,9 @@ import { render, screen, cleanup, fireEvent, within } from '@testing-library/rea
 import { MemoryRouter, useLocation } from 'react-router'
 import { ThemeProvider } from '../../context/ThemeContext.jsx'
 import { CartProvider } from '../../context/CartContext.jsx'
-import { createStorage } from '../../data/storage.js'
-import { fakeBackend } from '../../data/fakeBackend.js'
-import { createProductsApi } from '../../data/products.js'
-import { createCartApi } from '../../data/cart.js'
+import { createFakeShop } from '../../api/fakeShop.js'
 import { AuthContext, AuthProvider } from '../../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../../data/fakeAuthApi.js'
+import { createFakeAuthApi } from '../../api/fakeAuthApi.js'
 import Header from './Header.jsx'
 
 describe('Header', () => {
@@ -17,9 +14,7 @@ describe('Header', () => {
   })
 
   it('muestra el logo y los 7 enlaces del menú', () => {
-    const storage = createStorage(fakeBackend())
-    const productsApi = createProductsApi(storage)
-    const api = { ...productsApi, ...createCartApi(storage, productsApi) }
+    const { storage, api } = createFakeShop()
     render(
       <MemoryRouter initialEntries={['/ofertas']}>
         <ThemeProvider storage={storage}>
@@ -32,15 +27,29 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: /NanitoMangas/ }).getAttribute('href')).toBe('/')
     const nav = screen.getByRole('navigation', { name: 'Menú principal' })
     const labels = [...nav.querySelectorAll('.nav-link')].map((a) => a.textContent.trim())
-    expect(labels).toEqual(['Inicio', 'Mangas', 'Funko Pop', 'Figuras', 'Accesorios', 'Ofertas', 'Novedades', 'Contacto'])
+    expect(labels).toEqual(['Inicio', 'Mangas', 'Memes', 'Funko Pop', 'Figuras', 'Accesorios', 'Ofertas', 'Novedades', 'Contacto'])
     expect(nav.querySelector('.nav-link.active').textContent).toBe('Ofertas')
+  })
+
+  it('Header_Memes_ofrece_Crear_y_Biblioteca', () => {
+    const { storage, api } = createFakeShop()
+    render(
+      <MemoryRouter>
+        <ThemeProvider storage={storage}>
+          <AuthProvider api={createFakeAuthApi().api}>
+            <CartProvider api={api}><Header /></CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Memes/ }))
+    expect(screen.getByRole('link', { name: 'Crear' }).getAttribute('href')).toBe('/memes/crear')
+    expect(screen.getByRole('link', { name: 'Biblioteca' }).getAttribute('href')).toBe('/memes/biblioteca')
   })
 
   describe('cuenta', () => {
     const renderWith = (authApi) => {
-      const storage = createStorage(fakeBackend())
-      const productsApi = createProductsApi(storage)
-      const api = { ...productsApi, ...createCartApi(storage, productsApi) }
+      const { storage, api } = createFakeShop()
       return render(
         <MemoryRouter>
           <ThemeProvider storage={storage}>
@@ -59,25 +68,79 @@ describe('Header', () => {
       expect(screen.queryByRole('button', { name: 'Salir' })).toBeNull()
     })
 
+    it('sin_sesion_muestra_Ingresar_y_Personal', async () => {
+      renderWith(createFakeAuthApi().api)
+      expect((await screen.findByRole('link', { name: 'Ingresar' })).getAttribute('href')).toBe('/ingresar')
+      expect(screen.getByRole('link', { name: 'Personal' }).getAttribute('href')).toBe('/ingresar/personal')
+    })
+
+    it('menu_movil_incluye_Acceso_de_personal', async () => {
+      renderWith(createFakeAuthApi().api)
+      await screen.findByRole('link', { name: 'Ingresar' })
+      const nav = screen.getByRole('navigation', { name: 'Menú principal' })
+      const items = [...nav.querySelectorAll('a')]
+      expect(items.at(-1).textContent).toBe('Acceso de personal')
+      expect(items.at(-1).getAttribute('href')).toBe('/ingresar/personal')
+    })
+
+    it('con_sesion_no_muestra_los_accesos', async () => {
+      const { api } = createFakeAuthApi()
+      await api.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
+      renderWith(api)
+      await screen.findByRole('link', { name: /Ana/ })
+      expect(screen.queryByRole('link', { name: 'Ingresar' })).toBeNull()
+      expect(screen.queryByRole('link', { name: 'Personal' })).toBeNull()
+      expect(screen.queryByRole('link', { name: 'Acceso de personal' })).toBeNull()
+    })
+
     it('con sesión muestra el primer nombre y "Salir" que cierra la sesión', async () => {
       const { api } = createFakeAuthApi()
-      const u = await api.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
-      api.setSession(u.id)
+      await api.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
       renderWith(api)
       const link = await screen.findByRole('link', { name: /Ana/ })
       expect(link.textContent).not.toContain('Pérez')
       expect(link.getAttribute('href')).toBe('/cuenta')
       fireEvent.click(screen.getByRole('button', { name: 'Salir' }))
       expect(await screen.findByRole('link', { name: 'Ingresar' })).toBeTruthy()
-      expect(api.getSessionUserId()).toBeNull()
+      expect(await api.restoreSession()).toBeNull()
+    })
+  })
+
+  describe('panel', () => {
+    it('Header_muestra_enlace_a_panel_segun_rol', async () => {
+      const { storage, api } = createFakeShop()
+      const auth = createFakeAuthApi().api
+      const view = () => render(
+        <MemoryRouter>
+          <ThemeProvider storage={storage}>
+            <AuthProvider api={auth}>
+              <CartProvider api={api}><Header /></CartProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </MemoryRouter>,
+      )
+      view()
+      await screen.findByRole('link', { name: 'Ingresar' })
+      expect(screen.queryByRole('link', { name: 'Panel' })).toBeNull()
+      cleanup()
+      await auth.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
+      view()
+      await screen.findByRole('link', { name: /Ana/ })
+      expect(screen.queryByRole('link', { name: 'Panel' })).toBeNull()
+      cleanup()
+      await auth.loginUser('vendedor@nanitomangas.cl', 'Vendedor1234')
+      view()
+      expect((await screen.findByRole('link', { name: 'Panel' })).getAttribute('href')).toBe('/vendedor')
+      cleanup()
+      await auth.loginUser('admin@nanitomangas.cl', 'Admin1234')
+      view()
+      expect((await screen.findByRole('link', { name: 'Panel' })).getAttribute('href')).toBe('/admin')
     })
   })
 
   describe('antes de que la sesión esté lista', () => {
     it('no muestra "Ingresar" ni "Salir" hasta que ready es true', () => {
-      const storage = createStorage(fakeBackend())
-      const productsApi = createProductsApi(storage)
-      const api = { ...productsApi, ...createCartApi(storage, productsApi) }
+      const { storage, api } = createFakeShop()
       render(
         <MemoryRouter>
           <ThemeProvider storage={storage}>
@@ -95,9 +158,7 @@ describe('Header', () => {
   describe('navegación', () => {
     const Where = () => { const l = useLocation(); return <output data-testid="where">{l.pathname + l.search}</output> }
     const setup = () => {
-      const storage = createStorage(fakeBackend())
-      const productsApi = createProductsApi(storage)
-      const api = { ...productsApi, ...createCartApi(storage, productsApi) }
+      const { storage, api } = createFakeShop()
       return render(
         <MemoryRouter>
           <ThemeProvider storage={storage}>

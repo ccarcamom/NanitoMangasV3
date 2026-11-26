@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useCart } from '../context/CartContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { placeOrder } from '../data/index.js'
+import { placeOrder } from '../api/index.js'
 import { simulatePayment } from '../lib/payment.js'
 import { formatCLP } from '../lib/money.js'
 import { isValidEmail, isValidRut, normalizeRut } from '../lib/validators.js'
@@ -78,19 +78,24 @@ function CheckoutForm({ user, cart, deps }) {
       return
     }
     try {
-      const order = deps.placeOrder({
-        userId: user?.id ?? null,
+      // el servidor toma el usuario del token y calcula envío y total
+      const order = await deps.placeOrder({
         email: buyer.email.trim().toLowerCase(),
         buyer: { name: buyer.name.trim(), rut: normalizeRut(buyer.rut) },
         delivery: { method, address: method === 'despacho' ? { ...address, street: address.street.trim() } : null },
+        items: lines.map(({ product, qty }) => ({ productId: product.id, qty })),
       })
-      navigate(`/compra-exitosa/${order.id}`, { replace: true })
+      try { sessionStorage.setItem('nm:last-order', JSON.stringify(order)) } catch { /* sin almacenamiento */ }
+      cart.clear()
+      cart.reload()
+      navigate(`/compra-exitosa/${order.id}`, { replace: true, state: { order } })
     } catch (err) {
       const [code, productId] = String(err?.message).split(':')
       // EMPTY_CART cae aquí: con el carro vacío el formulario se desmonta y se ve el estado vacío.
-      if (code !== 'OUT_OF_STOCK') return release(GENERIC_ERROR)
+      if (code !== 'OUT_OF_STOCK' && code !== 'PRODUCT_NOT_FOUND') return release(GENERIC_ERROR)
+      cart.reload() // el stock o el catálogo cambió: se refresca para que el carro lo refleje
       const name = lines.find((l) => l.product.id === productId)?.product.name ?? 'Un producto'
-      release(`${name} ya no tiene stock suficiente. Revisa tu carro.`)
+      release(code === 'OUT_OF_STOCK' ? `${name} ya no tiene stock suficiente. Revisa tu carro.` : `${name} ya no está disponible. Revisa tu carro.`)
     }
   }
 
@@ -121,7 +126,6 @@ function CheckoutForm({ user, cart, deps }) {
           </section>
           <section className="checkout__section" aria-labelledby="checkout-payment">
             <h2 id="checkout-payment" className="h4">Pago</h2>
-            <p className="checkout__note">Pago simulado: no se realiza ningún cobro real</p>
             <CardForm value={card} onChange={edit(setCard, card)} errors={errors} />
           </section>
         </div>
@@ -141,14 +145,16 @@ function CheckoutForm({ user, cart, deps }) {
 export default function Checkout({ deps = DEFAULT_DEPS }) {
   const cart = useCart()
   const { user, ready } = useAuth()
-  if (!ready) return null
+  const formKey = useRef('guest')
+  if (user) formKey.current = user.id // al expirar la sesión el formulario sigue montado
+  if (!ready || cart.loading) return null
   const empty = cart.lines.length === 0 && cart.missing.length === 0
   return (
     <section className="container page">
       <h1 className="page__title">Pagar</h1>
       {empty
-        ? <EmptyState title="Tu carro está vacío" text="Agrega productos para pagar." action={<Link className="btn btn-primary" to="/">Ver productos</Link>} />
-        : <CheckoutForm key={user?.id ?? 'guest'} user={user} cart={cart} deps={deps} />}
+        ? <EmptyState title="Tu carro está vacío" action={<Link className="btn btn-primary" to="/">Ver productos</Link>} />
+        : <CheckoutForm key={formKey.current} user={user} cart={cart} deps={deps} />}
     </section>
   )
 }

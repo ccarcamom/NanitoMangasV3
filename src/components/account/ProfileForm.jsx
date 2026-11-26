@@ -26,18 +26,22 @@ export default function ProfileForm() {
 
   const edit = (patch) => { setValues({ ...values, ...patch }); setSaved(false) }
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     const found = validate(values)
     setErrors(found)
     setSaved(false)
     if (Object.keys(found).length) return
-    updateProfile({
-      name: values.name.trim(),
-      rut: values.rut.trim() ? normalizeRut(values.rut) : '',
-      address: hasAddress(values.address) ? values.address : null,
-    })
-    setSaved(true)
+    try {
+      await updateProfile({
+        name: values.name.trim(),
+        rut: values.rut.trim() ? normalizeRut(values.rut) : '',
+        address: hasAddress(values.address) ? values.address : null,
+      })
+      setSaved(true)
+    } catch {
+      setErrors({ name: 'No pudimos guardar los cambios, intenta de nuevo.' })
+    }
   }
 
   return (

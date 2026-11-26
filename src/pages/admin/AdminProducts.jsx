@@ -1,42 +1,54 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { Plus } from '@phosphor-icons/react'
-import * as data from '../../data/index.js'
-import { useProducts } from '../../hooks/useProducts.js'
+import * as defaultApi from '../../api/index.js'
+import { useAsync } from '../../hooks/useAsync.js'
 import { normalizeText } from '../../lib/catalog.js'
 import EmptyState from '../../components/common/EmptyState.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
+import { loadingOrError } from './AdminTable.jsx'
+import { productFailure } from './apiErrors.js'
 import ProductRow from './ProductRow.jsx'
 
-// `api` = { subscribeProducts, listProducts, deleteProduct }; specs inject one over a fake storage.
-export default function AdminProducts({ api = data }) {
-  const products = useProducts(api)
+// `api` = { listProducts | listMyProducts, deleteProduct }; `mine` = solo los del vendedor; `base` = prefijo de las rutas.
+export default function AdminProducts({ api = defaultApi, base = '/admin', mine = false }) {
+  const state = useAsync(mine ? api.listMyProducts : api.listProducts, api)
+  const [failure, setFailure] = useState(null)
   const [query, setQuery] = useState('')
   const [target, setTarget] = useState(null)
   const [notice, setNotice] = useState(useLocation().state?.notice ?? null)
 
   const q = normalizeText(query)
-  const shown = products.filter((p) => normalizeText(`${p.name} ${p.brand}`).includes(q))
+  const status = loadingOrError(state, 'los productos')
+  const shown = (state.data ?? []).filter((p) => normalizeText(`${p.name} ${p.brand}`).includes(q))
 
-  const confirmDelete = () => {
-    api.deleteProduct(target.id)
-    setNotice('Producto eliminado')
+  const confirmDelete = async () => {
+    const { id } = target
     setTarget(null)
+    setFailure(null)
+    try {
+      await api.deleteProduct(id)
+      state.setData(state.data.filter((p) => p.id !== id))
+      setNotice('Producto eliminado')
+    } catch (err) {
+      setFailure(productFailure(err, 'No pudimos eliminar el producto'))
+    }
   }
 
   return (
     <section>
       <div className="admin__head">
         <h1 className="page__title">Productos</h1>
-        <Link to="/admin/productos/nuevo" className="btn btn-primary"><Plus size={18} aria-hidden="true" /> Nuevo producto</Link>
+        <Link to={`${base}/productos/nuevo`} className="btn btn-primary"><Plus size={18} aria-hidden="true" /> Nuevo producto</Link>
       </div>
+      {failure && <div className="alert-nm" role="alert"><p className="mb-0">{failure}</p></div>}
       <p role="status" className="admin__notice" hidden={!notice}>{notice}</p>
       <input
         type="search" className="form-control admin__search" placeholder="Buscar por nombre o marca"
         aria-label="Buscar productos" value={query} onChange={(e) => setQuery(e.target.value)}
       />
-      {shown.length === 0 ? (
-        <EmptyState title="No hay productos" text="Prueba con otra búsqueda o crea uno nuevo." />
+      {status ?? (shown.length === 0 ? (
+        <EmptyState title="No hay productos" />
       ) : (
         <div className="table-responsive">
           <table className="table align-middle admin__table" aria-label="Productos">
@@ -48,10 +60,10 @@ export default function AdminProducts({ api = data }) {
                 <th scope="col"><span className="visually-hidden">Acciones</span></th>
               </tr>
             </thead>
-            <tbody>{shown.map((p) => <ProductRow key={p.id} product={p} onDelete={setTarget} />)}</tbody>
+            <tbody>{shown.map((p) => <ProductRow key={p.id} product={p} base={base} onDelete={setTarget} />)}</tbody>
           </table>
         </div>
-      )}
+      ))}
       <ConfirmDialog
         show={target !== null}
         title="Eliminar producto"

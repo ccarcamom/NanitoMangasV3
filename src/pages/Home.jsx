@@ -14,7 +14,7 @@ const rows = [
 ]
 
 export default function Home({ products: given, banners = seedBanners }) {
-  const stored = useProducts()
+  const { data: stored } = useProducts()
   const products = given ?? stored
   const { add } = useCart()
   const body = useRef(null)

@@ -8,7 +8,7 @@ import ProductGrid from '../components/shop/ProductGrid.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
 
 export default function Category({ products: given, categories = seedCategories, onlyNew = false, onlyOffers = false }) {
-  const stored = useProducts()
+  const { data: stored, loading, error } = useProducts()
   const { add } = useCart()
   const { categoryId } = useParams()
   const [params, setParams] = useSearchParams()
@@ -40,10 +40,14 @@ export default function Category({ products: given, categories = seedCategories,
       <h1 className="page__title">{onlyNew ? 'Novedades' : onlyOffers ? 'Ofertas' : category.name}</h1>
       <FilterBar genres={genres} sort={sort} genre={genre} onChange={change} />
       <div className="page__grid">
-        {list.length === 0 && genre ? (
+        {!given && loading ? (
+          <EmptyState title="Cargando productos…" />
+        ) : !given && error ? (
+          <EmptyState title="No pudimos cargar los productos" />
+        ) : list.length === 0 && genre ? (
           <EmptyState title="No hay productos con ese filtro" action={<button type="button" className="btn btn-primary" onClick={() => change({ genre: null })}>Quitar filtros</button>} />
         ) : onlyOffers && list.length === 0 ? (
-          <EmptyState title="Por ahora no hay ofertas" text="Vuelve pronto, renovamos los descuentos seguido." />
+          <EmptyState title="Por ahora no hay ofertas" />
         ) : <ProductGrid products={list} onAdd={add} />}
       </div>
     </section>

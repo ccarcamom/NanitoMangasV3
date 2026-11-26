@@ -13,7 +13,6 @@ describe('PaymentFailed', () => {
     setup({ reason: 'CARD_DECLINED' })
     expect(screen.getByRole('heading', { level: 1, name: 'No se pudo realizar el pago' })).toBeTruthy()
     expect(screen.getByText('Tu banco rechazó el pago.')).toBeTruthy()
-    expect(screen.getByText(/Tu carro sigue intacto/)).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Reintentar pago' }).getAttribute('href')).toBe('/checkout')
     expect(screen.getByRole('link', { name: 'Volver al carro' }).getAttribute('href')).toBe('/carro')
   })

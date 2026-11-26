@@ -1,16 +1,17 @@
-import { useSyncExternalStore } from 'react'
-import * as data from '../../data/index.js'
+import * as defaultApi from '../../api/index.js'
+import { useAsync } from '../../hooks/useAsync.js'
 import { formatCLP } from '../../lib/money.js'
 import { formatDate, newestFirst } from '../../lib/dates.js'
-import { rowsOrEmpty } from './AdminTable.jsx'
+import { loadingOrError, rowsOrEmpty } from './AdminTable.jsx'
 
-// `api` = { subscribeOrders, listOrders }; specs inject one over a fake storage. Newest first.
-export default function AdminOrders({ api = data }) {
-  const orders = [...useSyncExternalStore(api.subscribeOrders, api.listOrders)].sort(newestFirst)
+// `api` = { listOrders }; specs inject a fake. Newest first.
+export default function AdminOrders({ api = defaultApi }) {
+  const state = useAsync(api.listOrders, api)
+  const status = loadingOrError(state, 'los pedidos')
   return (
     <section>
       <h1 className="page__title">Pedidos</h1>
-      {rowsOrEmpty(orders, 'Todavía no hay pedidos', 'Pedidos',
+      {status ?? rowsOrEmpty([...state.data].sort(newestFirst), 'Todavía no hay pedidos', 'Pedidos',
         ['Número', 'Fecha', 'Comprador', 'Entrega', 'Ítems', 'Total', 'Estado'],
         (o) => (
           <tr key={o.id}>

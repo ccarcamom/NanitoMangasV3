@@ -11,7 +11,6 @@ export default function PaymentFailed() {
     <section className="container page page--narrow">
       <h1 className="page__title">No se pudo realizar el pago</h1>
       <p className="lead">{MESSAGES[reason] ?? 'El pago no se completó.'}</p>
-      <p className="text-secondary">Tu carro sigue intacto: no se creó ningún pedido ni se hizo ningún cobro.</p>
       <div className="page__actions">
         <Link to="/checkout" className="btn btn-primary">Reintentar pago</Link>
         <Link to="/carro" className="btn btn-outline-secondary">Volver al carro</Link>

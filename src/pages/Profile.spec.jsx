@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { AuthProvider } from '../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../data/fakeAuthApi.js'
+import { createFakeAuthApi } from '../api/fakeAuthApi.js'
 import Profile from './Profile.jsx'
 
 const order = (id, userId, createdAt, name) => ({
@@ -15,7 +15,7 @@ describe('Profile', () => {
     <MemoryRouter initialEntries={['/cuenta']}>
       <AuthProvider api={api}>
         <Routes>
-          <Route path="/cuenta" element={<Profile ordersApi={{ listOrdersByUser: (id) => orders.filter((o) => o.userId === id) }} />} />
+          <Route path="/cuenta" element={<Profile ordersApi={{ listMyOrders: async () => orders }} />} />
           <Route path="/" element={<p>inicio</p>} />
         </Routes>
       </AuthProvider>
@@ -23,8 +23,7 @@ describe('Profile', () => {
   )
   beforeEach(async () => {
     api = createFakeAuthApi().api
-    user = await api.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' })
-    api.setSession(user.id)
+    ;({ user } = await api.registerUser({ name: 'Ana Pérez', email: 'ana@mail.cl', password: 'Clave1234' }))
   })
   afterEach(cleanup)
 
@@ -46,21 +45,19 @@ describe('Profile', () => {
     fireEvent.change(screen.getByLabelText('Comuna'), { target: { value: 'Viña del Mar' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
     expect(await screen.findByText('Cambios guardados')).toBeTruthy()
-    const saved = api.getUser(user.id)
+    const saved = await api.restoreSession()
     expect(saved.rut).toBe('12345678-5')
     expect(saved.address).toEqual({ street: 'Calle 1', comuna: 'Viña del Mar', region: 'Región de Valparaíso' })
   })
 
-  it('Mis pedidos lista solo los del usuario, el más nuevo primero', async () => {
+  it('Mis pedidos lista los que entrega la API, el más nuevo primero', async () => {
     setup([
       order('NM-000001', user.id, '2026-10-01T10:00:00Z', 'Manga Uno'),
-      order('NM-000002', 'otro', '2026-10-02T10:00:00Z', 'Manga Ajeno'),
       order('NM-000003', user.id, '2026-10-03T10:00:00Z', 'Manga Tres'),
     ])
-    await screen.findByRole('heading', { name: 'Mis pedidos' })
+    await screen.findByText('NM-000003')
     const ids = [...document.querySelectorAll('.order__id')].map((n) => n.textContent)
     expect(ids).toEqual(['NM-000003', 'NM-000001'])
-    expect(screen.queryByText(/Manga Ajeno/)).toBeNull()
     expect(screen.getAllByText(/2 x/).length).toBe(2)
   })
 
@@ -74,7 +71,7 @@ describe('Profile', () => {
     setup()
     fireEvent.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
     await screen.findByText('inicio')
-    expect(api.getSessionUserId()).toBeNull()
+    expect(await api.restoreSession()).toBeNull()
   })
 
   it('solo el admin ve el enlace al panel', async () => {
@@ -82,8 +79,7 @@ describe('Profile', () => {
     await screen.findByRole('heading', { name: 'Mi cuenta' })
     expect(screen.queryByRole('link', { name: 'Ir al panel de administración' })).toBeNull()
     cleanup()
-    const admin = await api.loginUser('admin@nanitomangas.cl', 'Admin1234')
-    api.setSession(admin.id)
+    await api.loginUser('admin@nanitomangas.cl', 'Admin1234')
     setup()
     expect((await screen.findByRole('link', { name: 'Ir al panel de administración' })).getAttribute('href')).toBe('/admin')
   })

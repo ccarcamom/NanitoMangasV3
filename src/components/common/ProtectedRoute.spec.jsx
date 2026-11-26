@@ -1,18 +1,19 @@
 import { render, screen, cleanup } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { AuthContext, AuthProvider } from '../../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../../data/fakeAuthApi.js'
+import { createFakeAuthApi } from '../../api/fakeAuthApi.js'
 import ProtectedRoute from './ProtectedRoute.jsx'
 
-const Probe = () => { const { state } = useLocation(); return <p>origen {state?.from?.pathname}</p> }
+const Probe = ({ staff }) => { const { state } = useLocation(); return <p>{staff && 'personal '}origen {state?.from?.pathname}</p> }
 
-const renderAt = (api, role) => render(
+const renderAt = (api, role, roles) => render(
   <MemoryRouter initialEntries={['/secreto']}>
     <AuthProvider api={api}>
       <Routes>
         <Route path="/ingresar" element={<Probe />} />
+        <Route path="/ingresar/personal" element={<Probe staff />} />
         <Route path="/" element={<p>inicio</p>} />
-        <Route path="/secreto" element={<ProtectedRoute role={role}><p>contenido secreto</p></ProtectedRoute>} />
+        <Route path="/secreto" element={<ProtectedRoute role={role} roles={roles}><p>contenido secreto</p></ProtectedRoute>} />
       </Routes>
     </AuthProvider>
   </MemoryRouter>,
@@ -29,31 +30,51 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('contenido secreto')).toBeNull()
   })
 
+  it('invitado_en_ruta_de_personal_va_a_ingresar_personal_con_from', async () => {
+    renderAt(api, 'ADMIN')
+    await screen.findByText('personal origen /secreto')
+    cleanup()
+    renderAt(api, undefined, ['VENDEDOR', 'ADMIN'])
+    await screen.findByText('personal origen /secreto')
+  })
+
+  it('invitado_en_ruta_de_cliente_va_a_ingresar', async () => {
+    renderAt(api, undefined, ['CLIENTE'])
+    await screen.findByText('origen /secreto')
+    expect(screen.queryByText('personal origen /secreto')).toBeNull()
+  })
+
   it('cliente en ruta admin redirige a /', async () => {
-    const u = await api.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
-    api.setSession(u.id)
-    renderAt(api, 'admin')
+    await api.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
+    renderAt(api, 'ADMIN')
     await screen.findByText('inicio')
   })
 
   it('cliente ve una ruta sin rol', async () => {
-    const u = await api.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
-    api.setSession(u.id)
+    await api.registerUser({ name: 'Ana', email: 'ana@mail.cl', password: 'Clave1234' })
     renderAt(api)
     await screen.findByText('contenido secreto')
   })
 
   it('admin ve el contenido', async () => {
-    const u = await api.loginUser('admin@nanitomangas.cl', 'Admin1234')
-    api.setSession(u.id)
-    renderAt(api, 'admin')
+    await api.loginUser('admin@nanitomangas.cl', 'Admin1234')
+    renderAt(api, 'ADMIN')
     await screen.findByText('contenido secreto')
   })
 
+  it('ProtectedRoute_roles_permite_y_niega', async () => {
+    await api.loginUser('vendedor@nanitomangas.cl', 'Vendedor1234')
+    renderAt(api, undefined, ['VENDEDOR', 'ADMIN'])
+    await screen.findByText('contenido secreto')
+    cleanup()
+    renderAt(api, undefined, ['ADMIN'])
+    await screen.findByText('inicio')
+    expect(screen.queryByText('contenido secreto')).toBeNull()
+  })
+
   it('sesión de un usuario inexistente equivale a sin sesión', async () => {
-    api.setSession('no-existe')
-    renderAt(api, 'admin')
-    await screen.findByText('origen /secreto')
+    renderAt(api, 'ADMIN')
+    await screen.findByText('personal origen /secreto')
   })
 
   it('mientras no está listo no renderiza nada', () => {

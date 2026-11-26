@@ -1,6 +1,7 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { seedProducts } from '../../data/seed.js'
+import { ApiError } from '../../api/http.js'
 import ProductForm from './ProductForm.jsx'
 
 function Probe() {
@@ -36,7 +37,10 @@ describe('ProductForm', () => {
     api = {
       createProduct: vi.fn().mockImplementation((i) => ({ ...i, id: 'new' })),
       updateProduct: vi.fn(),
-      getProduct: (id) => (id === existing.id ? existing : undefined),
+      getProduct: vi.fn().mockImplementation(async (id) => {
+        if (id !== existing.id) throw new ApiError(404, 'NOT_FOUND')
+        return existing
+      }),
     }
   })
   afterEach(cleanup)
@@ -133,24 +137,24 @@ describe('ProductForm', () => {
     expect(screen.getByLabelText('Género').value).toBe('')
   })
 
-  it('editar carga valores y llama updateProduct con el id', () => {
+  it('editar carga valores y llama updateProduct con el id', async () => {
     setup('/admin/productos/manga-2')
-    expect(screen.getByRole('heading', { name: 'Editar producto', level: 1 })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Editar producto', level: 1 })).toBeTruthy()
     expect(screen.getByLabelText('Nombre').value).toBe(existing.name)
     expect(screen.getByLabelText('Precio de oferta (opcional)').value).toBe('9990')
     change('Precio', '15000')
     change('Precio de oferta (opcional)', '')
     save()
-    expect(api.updateProduct).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(api.updateProduct).toHaveBeenCalledTimes(1))
     const [id, patch] = api.updateProduct.mock.lastCall
     expect(id).toBe('manga-2')
     expect(patch.price).toBe(15000)
     expect(patch.salePrice).toBeNull()
   })
 
-  it('id desconocido muestra el estado vacío', () => {
+  it('id desconocido muestra el estado vacío', async () => {
     setup('/admin/productos/nada')
-    expect(screen.getByRole('heading', { name: 'Producto no encontrado' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Producto no encontrado' })).toBeTruthy()
   })
 
   it('doble envío llama al servicio una vez', async () => {
@@ -164,6 +168,49 @@ describe('ProductForm', () => {
     expect(api.createProduct).toHaveBeenCalledTimes(1)
     d.resolve({ id: 'x' })
     expect(await screen.findByText(/lista \/admin\/productos/)).toBeTruthy()
+  })
+
+  it('el vendedor guarda y vuelve a su lista', async () => {
+    render(
+      <MemoryRouter initialEntries={['/vendedor/productos/nuevo']}>
+        <Routes>
+          <Route path="/vendedor/productos/nuevo" element={<ProductForm api={api} base="/vendedor" />} />
+          <Route path="/vendedor/productos" element={<Probe />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    fill()
+    save()
+    expect(await screen.findByText('lista /vendedor/productos Producto guardado')).toBeTruthy()
+  })
+
+  for (const [status, text] of [[403, 'No tienes permiso para modificar este producto.'], [404, 'El producto ya no existe.']]) {
+    it(`guardar con ${status} muestra "${text}"`, async () => {
+      api.updateProduct.mockRejectedValue(new ApiError(status, 'X'))
+      setup('/admin/productos/manga-2')
+      await screen.findByLabelText('Nombre')
+      save()
+      expect((await screen.findByRole('alert')).textContent).toBe(text)
+    })
+  }
+
+  it('guardar con 400 y detail de texto muestra el mensaje del servidor', async () => {
+    api.createProduct.mockRejectedValueOnce(new ApiError(400, 'VALIDATION', 'El precio debe ser mayor a 0'))
+    setup()
+    fill()
+    save()
+    expect((await screen.findByRole('alert')).textContent).toBe('El precio debe ser mayor a 0')
+  })
+
+  it('guardar con 409 usa el mensaje del servidor y otro error el genérico', async () => {
+    api.createProduct.mockRejectedValueOnce(new ApiError(409, 'X', { message: 'Stock inválido' }))
+    setup()
+    fill()
+    save()
+    expect((await screen.findByRole('alert')).textContent).toBe('Stock inválido')
+    api.createProduct.mockRejectedValueOnce(new Error('boom'))
+    save()
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('No pudimos guardar el producto. Intenta de nuevo.'))
   })
 
   it('Cancelar vuelve a la lista', () => {

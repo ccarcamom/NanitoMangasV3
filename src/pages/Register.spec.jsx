@@ -1,15 +1,16 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { AuthProvider } from '../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../data/fakeAuthApi.js'
+import { createFakeAuthApi } from '../api/fakeAuthApi.js'
 import Register from './Register.jsx'
 
-const setup = (api) => render(
-  <MemoryRouter initialEntries={['/registro']}>
+const setup = (api, entry = '/registro') => render(
+  <MemoryRouter initialEntries={[entry]}>
     <AuthProvider api={api}>
       <Routes>
         <Route path="/registro" element={<Register />} />
         <Route path="/cuenta" element={<p>cuenta</p>} />
+        <Route path="/vendedor" element={<p>panel vendedor</p>} />
       </Routes>
     </AuthProvider>
   </MemoryRouter>,
@@ -74,6 +75,27 @@ describe('Register', () => {
     setup(api)
     fill({})
     await screen.findByText('cuenta')
-    expect(api.getSessionUserId()).not.toBeNull()
+    expect(await api.restoreSession()).not.toBeNull()
+  })
+
+  it('por_defecto_crea_cliente_sin_selector', async () => {
+    const spy = vi.spyOn(api, 'registerUser')
+    setup(api)
+    expect(screen.queryByLabelText('Tipo de cuenta')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Crear cuenta' })).toBeTruthy()
+    fill({})
+    await screen.findByText('cuenta')
+    expect(spy.mock.lastCall[0].role).toBe('CLIENTE')
+  })
+
+  it('tipo_vendedor_crea_vendedor_y_va_a_vendedor', async () => {
+    const spy = vi.spyOn(api, 'registerUser')
+    setup(api, '/registro?tipo=vendedor')
+    expect(screen.queryByLabelText('Tipo de cuenta')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Crear cuenta de vendedor' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Ingresa' }).getAttribute('href')).toBe('/ingresar/personal')
+    fill({})
+    await screen.findByText('panel vendedor')
+    expect(spy.mock.lastCall[0].role).toBe('VENDEDOR')
   })
 })

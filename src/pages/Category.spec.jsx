@@ -1,10 +1,8 @@
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { CartProvider } from '../context/CartContext.jsx'
-import { createStorage } from '../data/storage.js'
-import { fakeBackend } from '../data/fakeBackend.js'
-import { createProductsApi } from '../data/products.js'
-import { createCartApi } from '../data/cart.js'
+import { createFakeShop } from '../api/fakeShop.js'
+import { flush } from '../../test/flush.js'
 import Category from './Category.jsx'
 
 const mk = (id, extra) => ({ id, name: `Prod ${id}`, brand: 'B', categoryId: 'mangas', genre: null, price: 1000, salePrice: null, stock: 3, image: '/i.svg', isNew: false, ...extra })
@@ -27,33 +25,35 @@ const setup = (url, onlyNew = false, list = products) => render(
 
 describe('Category', () => {
   beforeEach(() => {
-    const storage = createStorage(fakeBackend())
-    const productsApi = createProductsApi(storage)
-    api = { ...productsApi, ...createCartApi(storage, productsApi) }
+    api = createFakeShop().api
   })
   afterEach(cleanup)
 
-  it('lista la categoría con su título', () => {
+  it('lista la categoría con su título', async () => {
     setup('/categoria/mangas')
+    await flush()
     expect(screen.getByRole('heading', { level: 1, name: 'Mangas' })).toBeTruthy()
     expect(screen.queryByText('Prod c')).toBeNull()
   })
 
-  it('?genero=shonen filtra', () => {
+  it('?genero=shonen filtra', async () => {
     setup('/categoria/mangas?genero=shonen')
+    await flush()
     expect(screen.getByText('Prod a')).toBeTruthy()
     expect(screen.queryByText('Prod b')).toBeNull()
   })
 
-  it('?genero= desconocido actúa como "Todos"', () => {
+  it('?genero= desconocido actúa como "Todos"', async () => {
     setup('/categoria/mangas?genero=nada')
+    await flush()
     expect(screen.getByText('Prod a')).toBeTruthy()
     expect(screen.getByText('Prod b')).toBeTruthy()
     expect(screen.getByText('Prod d')).toBeTruthy()
   })
 
-  it('"Quitar filtros" limpia ?genero= y vuelve a mostrar todo', () => {
+  it('"Quitar filtros" limpia ?genero= y vuelve a mostrar todo', async () => {
     setup('/categoria/mangas?genero=seinen')
+    await flush()
     expect(screen.queryByText('Prod a')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
     expect(screen.getByText('Prod a')).toBeTruthy()
@@ -61,30 +61,34 @@ describe('Category', () => {
     expect(screen.queryByRole('button', { name: 'Quitar filtros' })).toBeNull()
   })
 
-  it('categoría inexistente muestra el estado vacío', () => {
+  it('categoría inexistente muestra el estado vacío', async () => {
     setup('/categoria/nada')
+    await flush()
     expect(screen.getAllByText('Categoría no encontrada').length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toBeTruthy()
   })
 
-  it('onlyNew lista solo isNew de todas las categorías', () => {
+  it('onlyNew lista solo isNew de todas las categorías', async () => {
     setup('/novedades', true)
+    await flush()
     expect(screen.getByRole('heading', { level: 1, name: 'Novedades' })).toBeTruthy()
     expect(screen.getByText('Prod c')).toBeTruthy()
     expect(screen.getByText('Prod d')).toBeTruthy()
     expect(screen.queryByText('Prod a')).toBeNull()
   })
 
-  it('onlyOffers lista solo productos con oferta real', () => {
+  it('onlyOffers lista solo productos con oferta real', async () => {
     setup('/ofertas', false, [mk('a', { salePrice: 800 }), mk('b'), mk('c', { salePrice: 1500 })])
+    await flush()
     expect(screen.getByRole('heading', { level: 1, name: 'Ofertas' })).toBeTruthy()
     expect(screen.getByText('Prod a')).toBeTruthy()
     expect(screen.queryByText('Prod b')).toBeNull()
     expect(screen.queryByText('Prod c')).toBeNull()
   })
 
-  it('onlyOffers sin ofertas muestra el estado vacío', () => {
+  it('onlyOffers sin ofertas muestra el estado vacío', async () => {
     setup('/ofertas', false, [mk('b')])
+    await flush()
     expect(screen.getByText('Por ahora no hay ofertas')).toBeTruthy()
   })
 })

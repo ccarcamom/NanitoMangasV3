@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
 import { isValidEmail, isValidPassword } from '../lib/validators.js'
 import FormField from '../components/forms/FormField.jsx'
@@ -17,11 +17,13 @@ const validate = (v) => ({
 export default function Register() {
   const { user, register } = useAuth()
   const navigate = useNavigate()
+  const seller = useSearchParams()[0].get('tipo') === 'vendedor'
+  const role = seller ? 'VENDEDOR' : 'CLIENTE'
   const [values, setValues] = useState({ name: '', email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
   const { pending: submitting, lock, unlock } = useSubmitLock()
 
-  if (user && !submitting) return <Navigate to="/cuenta" replace />
+  if (user && !submitting) return <Navigate to={seller ? '/vendedor' : '/cuenta'} replace />
 
   const bind = bindFields(values, errors, setValues)
 
@@ -32,8 +34,8 @@ export default function Register() {
     if (Object.keys(found).length) return
     if (!lock()) return
     try {
-      await register({ name: values.name.trim(), email: values.email, password: values.password })
-      navigate('/cuenta', { replace: true })
+      await register({ name: values.name.trim(), email: values.email, password: values.password, role })
+      navigate(seller ? '/vendedor' : '/cuenta', { replace: true })
     } catch (err) {
       setErrors({ email: err.message === 'EMAIL_TAKEN' ? 'Este correo ya está registrado' : 'No pudimos crear la cuenta, intenta de nuevo' })
       unlock()
@@ -42,7 +44,7 @@ export default function Register() {
 
   return (
     <section className="container page page--narrow">
-      <h1 className="page__title">Crear cuenta</h1>
+      <h1 className="page__title">{seller ? 'Crear cuenta de vendedor' : 'Crear cuenta'}</h1>
       <form onSubmit={submit} noValidate>
         <FormField label="Nombre" autoComplete="name" {...bind('name')} />
         <FormField label="Correo" type="email" autoComplete="email" {...bind('email')} />
@@ -54,7 +56,7 @@ export default function Register() {
         <FormField label="Confirmar contraseña" type="password" autoComplete="new-password" {...bind('confirm')} />
         <button type="submit" className="btn btn-primary" disabled={submitting}>Crear cuenta</button>
       </form>
-      <p className="page__alt">¿Ya tienes cuenta? <Link to="/ingresar">Ingresa</Link></p>
+      <p className="page__alt">¿Ya tienes cuenta? <Link to={seller ? '/ingresar/personal' : '/ingresar'}>Ingresa</Link></p>
     </section>
   )
 }

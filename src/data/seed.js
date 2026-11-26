@@ -1,8 +1,3 @@
-export const ADMIN_EMAIL = 'admin@nanitomangas.cl'
-export const ADMIN_PASSWORD = 'Admin1234'
-// sha256 hex de 'Admin1234' (se verifica en la prueba de crypto.js)
-export const ADMIN_SEED_HASH = '60fe74406e7f353ed979f350f2fbb6a2e8690a5fa7d1b0c32983d1d8b3f95f67'
-
 export const categories = [
   {
     id: 'mangas',
@@ -36,9 +31,6 @@ export const banners = [
   },
 ]
 
-// subir al cambiar seedProducts: el catálogo guardado en el navegador se vuelve a sembrar
-export const SEED_VERSION = 2
-
 export const seedProducts = [
   { id: 'manga-1', name: 'One Piece - Tomo 1', brand: 'Ivrea', categoryId: 'mangas', genre: 'shonen', price: 10990, salePrice: null, stock: 12, image: '/img/OnePiece_1_IVREAAR.jpg', description: 'Luffy se lanza al mar para convertirse en el Rey de los Piratas.', isNew: true, isBestSeller: true, isRestock: false },
   { id: 'manga-2', name: 'Vagabond - Tomo 1', brand: 'Panini Manga', categoryId: 'mangas', genre: 'seinen', price: 12990, salePrice: 9990, stock: 8, image: '/img/Vagabond_1_IVREAAR.jpg', description: 'La historia de Miyamoto Musashi y su camino de la espada.', isNew: false, isBestSeller: true, isRestock: true },
@@ -57,17 +49,4 @@ export const seedProducts = [
   { id: 'acc-2', name: 'Figura Luffy 18 cm', brand: 'One Piece', categoryId: 'figuras', genre: null, price: 29990, salePrice: null, stock: 5, image: '/img/luffy.webp', description: 'Figura de Monkey D. Luffy de 18 cm de alto.', isNew: false, isBestSeller: true, isRestock: false },
   { id: 'acc-3', name: 'Aretes de Zoro', brand: 'One Piece', categoryId: 'accesorios', genre: null, price: 12990, salePrice: null, stock: 15, image: '/img/aretes_zoro.webp', description: 'Aretes inspirados en los pendientes de Roronoa Zoro.', isNew: false, isBestSeller: false, isRestock: true },
   { id: 'acc-4', name: 'Moledor Nika', brand: 'One Piece', categoryId: 'accesorios', genre: null, price: 14990, salePrice: null, stock: 10, image: '/img/fruta_moledor.webp', description: 'Moledor inspirado en la fruta de Luffy en modo Nika.', isNew: true, isBestSeller: false, isRestock: true },
-]
-
-export const seedUsers = [
-  {
-    id: 'user-admin',
-    name: 'Administrador',
-    email: ADMIN_EMAIL,
-    passwordHash: ADMIN_SEED_HASH,
-    role: 'admin',
-    rut: '',
-    address: null,
-    createdAt: '2026-10-21T00:00:00.000Z',
-  },
 ]

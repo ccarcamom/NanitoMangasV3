@@ -1,10 +1,8 @@
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { CartProvider } from '../context/CartContext.jsx'
-import { createStorage } from '../data/storage.js'
-import { fakeBackend } from '../data/fakeBackend.js'
-import { createProductsApi } from '../data/products.js'
-import { createCartApi } from '../data/cart.js'
+import { createFakeShop } from '../api/fakeShop.js'
+import { flush } from '../../test/flush.js'
 import Cart from './Cart.jsx'
 
 // API propia sobre un storage falso: ningún spec toca el localStorage real.
@@ -15,14 +13,13 @@ const payLink = () => screen.getByRole('link', { name: 'Ir a pagar' })
 
 describe('Cart', () => {
   beforeEach(() => {
-    const storage = createStorage(fakeBackend())
-    const productsApi = createProductsApi(storage)
-    api = { ...productsApi, ...createCartApi(storage, productsApi) }
+    api = createFakeShop().api
   })
   afterEach(cleanup)
 
-  it('carro vacío: estado vacío con enlace a la tienda y sin "Ir a pagar"', () => {
+  it('carro vacío: estado vacío con enlace a la tienda y sin "Ir a pagar"', async () => {
     setup()
+    await flush()
     expect(screen.getByRole('heading', { level: 1, name: 'Tu carro' })).toBeTruthy()
     expect(screen.getByText('Tu carro está vacío')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Ver productos' }).getAttribute('href')).toBe('/')
@@ -30,25 +27,28 @@ describe('Cart', () => {
     expect(screen.queryByRole('region', { name: 'Resumen' })).toBeNull()
   })
 
-  it('cambiar la cantidad actualiza el total de la línea y el Total', () => {
+  it('cambiar la cantidad actualiza el total de la línea y el Total', async () => {
     api.addToCart('manga-1', 1) // $10.990
     setup()
+    await flush()
     expect(summary().getByText('Subtotal').nextSibling.textContent).toBe('$10.990')
     fireEvent.click(screen.getByRole('button', { name: 'Sumar uno' }))
     expect(screen.getAllByText('$21.980').length).toBeGreaterThan(0)
     expect(summary().getByText('Total').nextSibling.textContent).toBe('$25.970') // + envío $3.990
   })
 
-  it('"Quitar" elimina la línea', () => {
+  it('"Quitar" elimina la línea', async () => {
     api.addToCart('manga-1', 1)
     setup()
+    await flush()
     fireEvent.click(screen.getByRole('button', { name: 'Quitar One Piece - Tomo 1' }))
     expect(screen.getByText('Tu carro está vacío')).toBeTruthy()
   })
 
-  it('"Retiro en tienda" deja el envío en $0 y cambia el total', () => {
+  it('"Retiro en tienda" deja el envío en $0 y cambia el total', async () => {
     api.addToCart('manga-1', 1)
     setup()
+    await flush()
     expect(summary().getByText('Envío').nextSibling.textContent).toBe('$3.990')
     expect(screen.getByText(/Te faltan \$29\.010 para envío gratis/)).toBeTruthy()
     fireEvent.click(screen.getByRole('radio', { name: 'Retiro en tienda' }))
@@ -57,24 +57,27 @@ describe('Cart', () => {
     expect(screen.queryByText(/Te faltan/)).toBeNull()
   })
 
-  it('despacho gratis sobre el umbral muestra "Gratis"', () => {
+  it('despacho gratis sobre el umbral muestra "Gratis"', async () => {
     api.addToCart('funko-1', 2) // $39.980
     api.addToCart('manga-1', 1)
     setup()
+    await flush()
     expect(summary().getByText('Envío').nextSibling.textContent).toBe('Gratis')
   })
 
-  it('"Ir a pagar" enlaza a /checkout', () => {
+  it('"Ir a pagar" enlaza a /checkout', async () => {
     api.addToCart('manga-1', 1)
     setup()
+    await flush()
     expect(screen.getByRole('link', { name: 'Ir a pagar' }).getAttribute('href')).toBe('/checkout')
   })
 
-  it('producto borrado: avisa, permite quitarlo y bloquea el pago', () => {
+  it('producto borrado: avisa, permite quitarlo y bloquea el pago', async () => {
     api.addToCart('funko-1', 1)
     api.addToCart('manga-1', 1)
     api.deleteProduct('funko-1')
     setup()
+    await flush()
     expect(screen.getByText('Algunos productos ya no están disponibles')).toBeTruthy()
     expect(payLink().getAttribute('aria-disabled')).toBe('true')
     fireEvent.click(screen.getByRole('button', { name: 'Quitar no disponibles' }))
@@ -82,13 +85,14 @@ describe('Cart', () => {
     expect(payLink().getAttribute('aria-disabled')).toBeNull()
   })
 
-  it('varios productos borrados: un único botón accesible que los quita todos', () => {
+  it('varios productos borrados: un único botón accesible que los quita todos', async () => {
     api.addToCart('funko-1', 1)
     api.addToCart('accesorio-1', 1)
     api.addToCart('manga-1', 1)
     api.deleteProduct('funko-1')
     api.deleteProduct('accesorio-1')
     setup()
+    await flush()
     const buttons = screen.getAllByRole('button', { name: /no disponibles?/ })
     expect(buttons.length).toBe(1)
     expect(buttons[0].getAttribute('aria-label')).toBe('Quitar no disponibles')
@@ -97,10 +101,11 @@ describe('Cart', () => {
     expect(api.getCart()).toEqual([{ productId: 'manga-1', qty: 1 }])
   })
 
-  it('cantidad sobre el stock: se ajusta al stock, avisa, totales coherentes y pago habilitado', () => {
+  it('cantidad sobre el stock: se ajusta al stock, avisa, totales coherentes y pago habilitado', async () => {
     api.addToCart('manga-1', 3) // $10.990 c/u
     api.updateProduct('manga-1', { stock: 2 })
     setup()
+    await flush()
     expect(api.getCart()).toEqual([{ productId: 'manga-1', qty: 2 }])
     expect(screen.getByRole('spinbutton').value).toBe('2')
     expect(screen.getByText('Ajustamos la cantidad al stock disponible')).toBeTruthy()
@@ -110,10 +115,11 @@ describe('Cart', () => {
     expect(payLink().getAttribute('aria-disabled')).toBeNull()
   })
 
-  it('línea sin stock: queda marcada y el pago bloqueado', () => {
+  it('línea sin stock: queda marcada y el pago bloqueado', async () => {
     api.addToCart('manga-1', 3)
     api.updateProduct('manga-1', { stock: 0 })
     setup()
+    await flush()
     expect(screen.getByText('Sin stock suficiente')).toBeTruthy()
     expect(screen.queryByText('Ajustamos la cantidad al stock disponible')).toBeNull()
     expect(payLink().getAttribute('aria-disabled')).toBe('true')

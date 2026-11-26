@@ -1,6 +1,3 @@
-import { storage as defaultStorage } from './storage.js'
-import { getProduct } from './products.js'
-
 const KEY = 'cart'
 
 // Entero finito o null. Acepta texto numérico ("3"), rechaza NaN, Infinity, null y basura.
@@ -67,7 +64,3 @@ export const createCartApi = (storage, productsApi) => {
     subscribeCart: (cb) => { listeners.add(cb); return () => { listeners.delete(cb) } },
   }
 }
-
-export const {
-  getCart, addToCart, setQty, removeFromCart, clearCart, subscribeCart,
-} = createCartApi(defaultStorage, { getProduct })

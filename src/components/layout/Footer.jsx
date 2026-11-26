@@ -60,7 +60,7 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <p className="site-footer__legal">© 2026 NanitoMangas. Proyecto académico, tienda de demostración.</p>
+        <p className="site-footer__legal">© 2026 NanitoMangas</p>
       </div>
     </footer>
   )

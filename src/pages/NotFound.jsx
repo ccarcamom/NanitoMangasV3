@@ -6,7 +6,6 @@ export default function NotFound() {
     <section className="container empty-state">
       <SmileySad size={56} className="empty-state__icon" aria-hidden="true" />
       <h1 className="h2">Página no encontrada</h1>
-      <p className="text-body-secondary">La dirección que buscas no existe o fue movida.</p>
       <Link to="/" className="btn btn-primary">Volver al inicio</Link>
     </section>
   )

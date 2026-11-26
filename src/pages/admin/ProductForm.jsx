@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import * as data from '../../data/index.js'
+import * as defaultApi from '../../api/index.js'
+import { useAsync } from '../../hooks/useAsync.js'
 import EmptyState from '../../components/common/EmptyState.jsx'
 import { focusFirstError } from '../../components/forms/formHelpers.js'
 import { useSubmitLock } from '../../hooks/useSubmitLock.js'
+import { loadingOrError } from './AdminTable.jsx'
+import { productFailure } from './apiErrors.js'
 import ProductFormFields, { FIELD_IDS } from './ProductFormFields.jsx'
 
 const BLANK = {
@@ -34,7 +37,7 @@ const validate = (v) => {
   }
 }
 
-function Editor({ initial, id, api }) {
+function Editor({ initial, id, api, base }) {
   const navigate = useNavigate()
   const [value, setValue] = useState(initial)
   const [errors, setErrors] = useState({})
@@ -62,9 +65,9 @@ function Editor({ initial, id, api }) {
     setFailure(null)
     try {
       await (id ? api.updateProduct(id, input) : api.createProduct(input))
-      navigate('/admin/productos', { state: { notice: 'Producto guardado' } })
-    } catch {
-      setFailure('No pudimos guardar el producto. Intenta de nuevo.')
+      navigate(`${base}/productos`, { state: { notice: 'Producto guardado' } })
+    } catch (err) {
+      setFailure(productFailure(err, 'No pudimos guardar el producto. Intenta de nuevo.'))
       unlock()
     }
   }
@@ -75,28 +78,33 @@ function Editor({ initial, id, api }) {
       <ProductFormFields value={value} errors={errors} onChange={change} />
       <div className="page__actions">
         <button type="submit" className="btn btn-primary" disabled={saving}>Guardar producto</button>
-        <Link to="/admin/productos" className="btn btn-outline-secondary">Cancelar</Link>
+        <Link to={`${base}/productos`} className="btn btn-outline-secondary">Cancelar</Link>
       </div>
     </form>
   )
 }
 
-// `api` = { createProduct, updateProduct, getProduct }; specs inject spies.
-export default function ProductForm({ api = data }) {
-  const { id } = useParams()
-  const product = id ? api.getProduct(id) : null
-  if (id && !product) {
-    return (
-      <section>
-        <h1 className="page__title">Editar producto</h1>
-        <EmptyState title="Producto no encontrado" action={<Link to="/admin/productos" className="btn btn-primary">Volver a productos</Link>} />
-      </section>
-    )
-  }
+function EditProduct({ id, api, base }) {
+  const state = useAsync(() => api.getProduct(id), id)
+  const status = state.error?.status === 404 ? null : loadingOrError(state, 'el producto')
   return (
     <section>
-      <h1 className="page__title">{id ? 'Editar producto' : 'Nuevo producto'}</h1>
-      <Editor key={id ?? 'new'} id={id} initial={product ? fromProduct(product) : BLANK} api={api} />
+      <h1 className="page__title">Editar producto</h1>
+      {status ?? (state.data
+        ? <Editor key={id} id={id} initial={fromProduct(state.data)} api={api} base={base} />
+        : <EmptyState title="Producto no encontrado" action={<Link to={`${base}/productos`} className="btn btn-primary">Volver a productos</Link>} />)}
+    </section>
+  )
+}
+
+// `api` = { createProduct, updateProduct, getProduct }; `base` = prefijo de las rutas; specs inject spies.
+export default function ProductForm({ api = defaultApi, base = '/admin' }) {
+  const { id } = useParams()
+  if (id) return <EditProduct id={id} api={api} base={base} />
+  return (
+    <section>
+      <h1 className="page__title">Nuevo producto</h1>
+      <Editor key="new" initial={BLANK} api={api} base={base} />
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useLayoutEffect, useState } from 'react'
-import { storage as defaultStorage } from '../data/index.js'
+import { storage as defaultStorage } from '../data/storage.js'
 
 const ThemeContext = createContext(null)
 

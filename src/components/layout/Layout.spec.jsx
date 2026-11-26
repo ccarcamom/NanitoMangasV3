@@ -2,21 +2,16 @@ import { render, screen, cleanup } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { ThemeProvider } from '../../context/ThemeContext.jsx'
 import { CartProvider } from '../../context/CartContext.jsx'
-import { createStorage } from '../../data/storage.js'
-import { fakeBackend } from '../../data/fakeBackend.js'
-import { createProductsApi } from '../../data/products.js'
-import { createCartApi } from '../../data/cart.js'
+import { createFakeShop } from '../../api/fakeShop.js'
 import { AuthProvider } from '../../context/AuthContext.jsx'
-import { createFakeAuthApi } from '../../data/fakeAuthApi.js'
+import { createFakeAuthApi } from '../../api/fakeAuthApi.js'
 import Layout from './Layout.jsx'
 
 describe('Layout', () => {
   afterEach(cleanup)
 
   it('no incluye la franja informativa (solo la portada la muestra)', () => {
-    const storage = createStorage(fakeBackend())
-    const productsApi = createProductsApi(storage)
-    const api = { ...productsApi, ...createCartApi(storage, productsApi) }
+    const { storage, api } = createFakeShop()
     render(
       <MemoryRouter initialEntries={['/x']}>
         <ThemeProvider storage={storage}><AuthProvider api={createFakeAuthApi().api}><CartProvider api={api}>
